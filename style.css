@@ -1,0 +1,276 @@
+/* =====================================================================
+   喵掌櫃股票研究所 — 前台共用樣式
+   =====================================================================*/
+
+* { box-sizing: border-box; }
+
+:root {
+    --bg: #f7f4ef;
+    --panel: #ffffff;
+    --panel-2: #fbf7f1;
+    --border: #e4dccf;
+    --text: #2c2a26;
+    --muted: #8a8278;
+    --primary: #c0673a;
+    --primary-dark: #9a4e2a;
+    --success: #4f8a4d;
+    --warning: #d4a132;
+    --danger: #c44848;
+    --link: #3b6e8f;
+    --shadow: 0 2px 6px rgba(0, 0, 0, .06);
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC",
+                 -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 20px 80px;
+}
+
+header.site-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+header.site-header h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: .04em;
+}
+header.site-header .sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-left: 12px;
+}
+
+nav.top-nav a {
+    margin-left: 18px;
+    color: var(--text);
+    font-weight: 500;
+}
+nav.top-nav a.active { color: var(--primary); }
+
+h2 {
+    font-size: 18px;
+    margin: 0 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+}
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 800px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+}
+
+.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 16px;
+}
+
+.card.compact { padding: 12px 14px; }
+
+.card .label {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 6px;
+    letter-spacing: .04em;
+}
+.card .value {
+    font-size: 22px;
+    font-weight: 600;
+}
+.card .value.small { font-size: 17px; font-weight: 500; }
+
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .04em;
+}
+.badge.ok      { background: #e7f2e2; color: var(--success); }
+.badge.warn    { background: #faecc8; color: var(--warning); }
+.badge.danger  { background: #f7d7d3; color: var(--danger); }
+.badge.muted   { background: #ece8e0; color: var(--muted); }
+.badge.bullish { background: #e7f2e2; color: var(--success); }
+.badge.bearish { background: #f7d7d3; color: var(--danger); }
+.badge.neutral { background: #ece8e0; color: var(--muted); }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+table th, table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+table th {
+    background: var(--panel-2);
+    font-weight: 600;
+    color: var(--text);
+    position: sticky;
+    top: 0;
+}
+tr:hover td { background: rgba(192, 103, 58, .04); }
+
+.scroll-y {
+    max-height: 380px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+button, .btn {
+    cursor: pointer;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background .15s;
+}
+button:hover { background: var(--primary-dark); }
+button:disabled { background: #ccc; cursor: not-allowed; }
+button.secondary {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+button.secondary:hover { background: rgba(192, 103, 58, .08); }
+button.danger { background: var(--danger); }
+
+input[type="text"], input[type="password"], input[type="number"], select {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    background: #fff;
+    color: var(--text);
+    width: 100%;
+    font-size: 14px;
+}
+
+.muted   { color: var(--muted); }
+.success { color: var(--success); }
+.danger  { color: var(--danger); }
+.warning { color: var(--warning); }
+
+.disclaimer {
+    margin-top: 36px;
+    padding: 14px 18px;
+    background: #fff8eb;
+    border: 1px solid #f0d089;
+    border-radius: 10px;
+    color: #5b4a1f;
+    font-size: 13.5px;
+}
+
+.disclaimer strong { display: block; margin-bottom: 4px; }
+
+.stat-flex {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.stat-flex .pill {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 13px;
+}
+
+.section {
+    margin-top: 24px;
+}
+
+.spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    vertical-align: -2px;
+    margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+footer.site-footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    font-size: 12.5px;
+}
+
+/* admin-only */
+.admin-login {
+    max-width: 420px;
+    margin: 60px auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+}
+.admin-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+.admin-actions button {
+    padding: 14px 12px;
+    text-align: left;
+}
+.toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    background: #2c2a26;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity .2s, transform .2s;
+    z-index: 100;
+    max-width: 360px;
+    font-size: 13.5px;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { background: var(--danger); }
+.toast.success { background: var(--success); }

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>喵掌櫃股票研究所 — 狀態查詢頁</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="喵掌櫃股票研究所狀態查詢頁;顯示研究後台是否在線、資料更新與規則版本。所有資訊僅供研究參考。" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <h1>🐾 喵掌櫃股票研究所</h1>
+    <span class="sub">獨立股票研究後台 — 狀態查詢頁</span>
+  </div>
+  <nav class="top-nav">
+    <a href="index.html" class="active">狀態</a>
+    <a href="admin.html">管理</a>
+  </nav>
+</header>
+
+<main class="container">
+
+  <section class="section">
+    <h2>系統狀態
+      <span class="muted" style="font-size:13px; font-weight:normal">
+        最後刷新:<span id="last-refresh">—</span>
+      </span>
+      <button id="refresh-btn" class="secondary" style="float:right">手動刷新</button>
+    </h2>
+    <div id="sys-status" class="grid grid-4">
+      <div class="card compact"><span class="spinner"></span>讀取中...</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>研究任務</h2>
+    <div id="research-status" class="card">
+      <span class="spinner"></span>讀取中...
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>規則庫摘要</h2>
+    <div id="rules-summary" class="card">
+      <span class="spinner"></span>讀取中...
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>今日訊號</h2>
+    <div id="today-signals" class="card">
+      <span class="spinner"></span>讀取中...
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>最新研究報告(AI 摘要)</h2>
+    <div id="latest-report" class="card">
+      <span class="spinner"></span>讀取中...
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>單檔查詢</h2>
+    <div class="card">
+      <div style="display:flex; gap:8px; max-width:480px">
+        <input type="text" id="symbol-input" placeholder="輸入股票代號(例 2330)" />
+        <button id="lookup-btn">查詢</button>
+      </div>
+      <div id="stock-result" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    <strong>免責聲明</strong>
+    本系統結果係根據歷史資料、規則統計與相似情境所做之研究推估,僅供資訊參考與風險辨識,
+    不構成任何投資建議或交易指示。投資人應自行判斷風險與承擔損益。
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  喵掌櫃股票研究所 v0.1 • 規格書 v1.1 • 研究用途
+</footer>
+
+<script src="config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
