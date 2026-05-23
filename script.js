@@ -502,16 +502,17 @@ async function loadTodayPredictions() {
                 <td class="name">${escapeHtml(p.symbol_name || "")}</td>
                 <td>${confidenceBadge(p.confidence_level, p.bullish_prob)}</td>
                 <td>${aiCell}</td>
+                <td>${hitBadge(p.is_hit)} / ${hitBadge(p.ai_is_hit)}</td>
                 <td class="dim" title="${escapeHtml((p.main_signals||[]).map(s=>s.rule_id).join(', '))}">${sigSnip}</td>
                 <td class="dim">${escapeHtml(p.regime_label || "—")}</td>
-                <td>${hitBadge(p.is_hit)} / ${hitBadge(p.ai_is_hit)}</td>
             </tr>`;
         }).join("");
         setHTML("predictions-body", `<table class="data">
             <thead><tr>
                 <th>代號</th><th>名稱</th>
                 <th>Math 預測</th><th>AI 預測</th>
-                <th>主要規則</th><th>市況</th><th>命中(M/AI)</th>
+                <th>命中(M/AI)</th>
+                <th>主要規則</th><th>市況</th>
             </tr></thead><tbody>${rows}</tbody></table>`);
     } catch (e) {
         setHTML("predictions-body", `<div class="empty">讀取失敗:${escapeHtml(e.message)}</div>`);

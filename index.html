@@ -173,25 +173,24 @@
             <button class="btn primary small" id="lookup-btn">查詢</button>
           </div>
           <div id="lookup-result" style="margin-top:8px"></div>
-          <div class="muted" style="font-size:11px; margin-top:10px; line-height:1.55">
-            本系統結果係根據歷史資料、規則統計與相似情境所做之研究推估,
-            <strong style="color:var(--warn)">僅供資訊參考與風險辨識,不構成任何投資建議。</strong>
-          </div>
         </div>
       </div>
     </aside>
 
   </main>
 
-  <!-- Status Bar ----------------------------------------------------- -->
+  <!-- Status Bar (v0.5: 中央加 disclaimer) --------------------------- -->
   <footer class="statusbar">
     <div class="left">
       <span class="item"><span class="dot muted"></span> <span id="api-base-label">connecting...</span></span>
       <span class="item">last update: <span id="last-update" class="mono">--</span></span>
     </div>
+    <div class="center" title="本系統結果係根據歷史資料、規則統計與相似情境所做之研究推估,僅供資訊參考與風險辨識,不構成任何投資建議。投資有風險,過去績效不代表未來表現。">
+      ⚠️ <strong>本系統僅供研究參考,不構成任何投資建議</strong> — 結果係根據歷史資料與規則統計所做之研究推估
+    </div>
     <div class="right">
       <span class="item">auto-refresh: <span id="refresh-interval" class="mono">60s</span></span>
-      <span class="item">v0.1 · MVP</span>
+      <span class="item">v0.5</span>
     </div>
   </footer>
 
