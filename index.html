@@ -37,11 +37,20 @@
   <!-- Main Grid ------------------------------------------------------ -->
   <main class="main">
 
-    <!-- Prediction Hero Row (v0.4) ----------------------------------- -->
+    <!-- Prediction Hero Row (v0.5 — Math + AI 並排) ------------------ -->
     <section class="hero-row">
       <div class="hero-card">
-        <div class="hero-label">系統整體預測成功率</div>
-        <div class="hero-value" id="hero-overall">--<span class="pct">%</span></div>
+        <div class="hero-label">系統整體預測成功率(近 30 天)</div>
+        <div class="hero-dual">
+          <div class="hero-side math">
+            <div class="hero-side-label">MATH</div>
+            <div class="hero-value" id="hero-overall">--<span class="pct">%</span></div>
+          </div>
+          <div class="hero-side ai">
+            <div class="hero-side-label">AI</div>
+            <div class="hero-value" id="hero-ai-overall">--<span class="pct">%</span></div>
+          </div>
+        </div>
         <div class="hero-sub">
           <span class="trendline" id="hero-trend">▁▁▁▁▁▁▁▁▁▁▁▁</span>
           <span class="hero-delta" id="hero-delta">--</span>
@@ -92,16 +101,6 @@
         <div class="label">今日訊號</div>
         <div class="value" id="v-signals">--</div>
         <div class="sub" id="v-signals-sub">&nbsp;</div>
-      </div>
-      <div class="kpi" id="kpi-features">
-        <div class="label">今日指標</div>
-        <div class="value" id="v-features">--</div>
-        <div class="sub" id="v-features-sub">&nbsp;</div>
-      </div>
-      <div class="kpi" id="kpi-outcomes">
-        <div class="label">5D 完成</div>
-        <div class="value" id="v-outcomes">--</div>
-        <div class="sub" id="v-outcomes-sub">&nbsp;</div>
       </div>
       <div class="kpi" id="kpi-data-date">
         <div class="label">最新資料日</div>

@@ -186,12 +186,6 @@ async function loadKPIs() {
         setText("v-signals", research.signals_today ?? 0);
         setText("v-signals-sub", "today");
 
-        setText("v-features", research.features_today ?? 0);
-        setText("v-features-sub", "今日");
-
-        setText("v-outcomes", research.outcomes_completed_5d ?? 0);
-        setText("v-outcomes-sub", "全期累計");
-
         const q = research.data_quality_issues_7d || {};
         const qTotal = Object.values(q).reduce((a, b) => a + b, 0);
         setText("v-quality", qTotal);
@@ -242,7 +236,15 @@ async function loadSignals() {
 async function loadRules() {
     try {
         const r = await apiGet("/api/rules/latest");
-        const rules = r.rules || [];
+        const raw = r.rules || [];
+        // v0.5: 去重 — 同一 rule_id 取第一筆(避免 5D/20D 重複顯示)
+        const seen = new Set();
+        const rules = [];
+        for (const rl of raw) {
+            if (seen.has(rl.rule_id)) continue;
+            seen.add(rl.rule_id);
+            rules.push(rl);
+        }
         const counts = rules.reduce((acc, x) => {
             acc[x.status] = (acc[x.status] || 0) + 1; return acc;
         }, {});
@@ -250,8 +252,9 @@ async function loadRules() {
             k==='active'?'up':k==='watch'?'warn':k==='testing'?'info':'muted'
         }">${k}:${v}</span>`;
         const counterHtml = Object.entries(counts).map(([k, v]) => tag(k, v)).join(" ");
-        setText("rules-meta", `${rules.length} 條 · v${r.version || "?"}`);
-        const rows = rules.slice(0, 30).map(rl => {
+        setText("rules-meta", `${rules.length} 條(去重後)· v${r.version || "?"}`);
+        // 不再 slice,顯示全部
+        const rows = rules.map(rl => {
             const ev = rl.evaluation || {};
             const e5 = ev["5D"] || {};
             const winRate = e5.win_rate;
@@ -418,21 +421,29 @@ async function loadPredictionHero() {
         }
         const w = overall.windows;
         const all = w.all || w["30d"] || w["7d"] || {};
-        const rate30 = (w["30d"] || {}).overall_rate;
-        const heroRate = rate30 != null ? rate30 : all.overall_rate;
+        const w30 = w["30d"] || {};
+        const heroRate = w30.overall_rate != null ? w30.overall_rate : all.overall_rate;
+        const aiRate = w30.ai_overall_rate != null ? w30.ai_overall_rate : all.ai_overall_rate;
         setHTML("hero-overall", heroRate != null
             ? (heroRate * 100).toFixed(1) + `<span class="pct">%</span>`
-            : "—");
+            : `--<span class="pct">%</span>`);
+        setHTML("hero-ai-overall", aiRate != null
+            ? (aiRate * 100).toFixed(1) + `<span class="pct">%</span>`
+            : `--<span class="pct">%</span>`);
 
-        // delta
-        const delta = (w["30d"] || {}).delta_vs_prior_window;
+        // delta — Math vs AI (右上小字)
+        const delta = w30.delta_vs_prior_window;
+        const agreement = w30.math_vs_ai_agreement;
+        let deltaParts = [];
         if (delta != null) {
             const sign = delta >= 0 ? "+" : "";
             const cls = delta >= 0 ? "pos" : "neg";
-            setHTML("hero-delta", `<span class="${cls}">vs 前 30 天 ${sign}${(delta * 100).toFixed(1)}pp</span>`);
-        } else {
-            setText("hero-delta", "");
+            deltaParts.push(`<span class="${cls}">vs 前 30D ${sign}${(delta * 100).toFixed(1)}pp</span>`);
         }
+        if (agreement != null) {
+            deltaParts.push(`<span class="dim">M↔AI 同意 ${(agreement * 100).toFixed(0)}%</span>`);
+        }
+        setHTML("hero-delta", deltaParts.join(" · ") || "");
 
         // breakdown
         const fillCell = (idRate, idN, src, rateField, nField) => {
@@ -480,21 +491,17 @@ async function loadTodayPredictions() {
             const sigSnip = Array.isArray(p.main_signals) && p.main_signals.length
                 ? p.main_signals.slice(0, 3).map(s => escapeHtml(s.rule_id)).join("·")
                 : "—";
-            // AI 預測欄
+            // AI 預測欄(v0.5: 移除 AI-M delta 欄,narrative 移到 title hover)
             const hasAi = p.ai_bullish_prob != null;
             const aiCell = hasAi
                 ? `${confidenceBadge(p.ai_confidence_level, p.ai_bullish_prob)}
                    <div class="ai-narrative" title="${escapeHtml(p.ai_narrative||'')}">${escapeHtml((p.ai_narrative||'').slice(0,40))}${(p.ai_narrative||'').length>40?'…':''}</div>`
                 : `<span class="tag muted">⌛ 待生成</span>`;
-            const deltaCell = hasAi && p.ai_vs_math_delta != null
-                ? `<span class="${p.ai_vs_math_delta > 0 ? 'pos' : p.ai_vs_math_delta < 0 ? 'neg' : 'dim'}">${p.ai_vs_math_delta > 0 ? '+' : ''}${(p.ai_vs_math_delta*100).toFixed(0)}pp</span>`
-                : '—';
             return `<tr>
                 <td class="mono"><strong>${escapeHtml(p.symbol)}</strong></td>
                 <td class="name">${escapeHtml(p.symbol_name || "")}</td>
                 <td>${confidenceBadge(p.confidence_level, p.bullish_prob)}</td>
                 <td>${aiCell}</td>
-                <td class="num">${deltaCell}</td>
                 <td class="dim" title="${escapeHtml((p.main_signals||[]).map(s=>s.rule_id).join(', '))}">${sigSnip}</td>
                 <td class="dim">${escapeHtml(p.regime_label || "—")}</td>
                 <td>${hitBadge(p.is_hit)} / ${hitBadge(p.ai_is_hit)}</td>
@@ -504,7 +511,6 @@ async function loadTodayPredictions() {
             <thead><tr>
                 <th>代號</th><th>名稱</th>
                 <th>Math 預測</th><th>AI 預測</th>
-                <th class="num">AI-M</th>
                 <th>主要規則</th><th>市況</th><th>命中(M/AI)</th>
             </tr></thead><tbody>${rows}</tbody></table>`);
     } catch (e) {
