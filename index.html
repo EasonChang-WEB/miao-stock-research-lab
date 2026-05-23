@@ -14,13 +14,17 @@
 
 <div class="app">
 
-  <!-- Top Bar ------------------------------------------------------- -->
+  <!-- Top Bar (v0.5.5: 加單檔查詢) ---------------------------------- -->
   <header class="topbar">
     <div class="brand">
       <span class="logo">🐾</span>
       <span class="name">喵掌櫃股票研究所</span>
       <span class="sep">·</span>
-      <span class="sub">Research Monitor v0.4</span>
+      <span class="sub">Research Monitor v0.5</span>
+    </div>
+    <div class="topbar-lookup">
+      <input type="text" id="symbol-input" placeholder="🔍 股票代號 例: 2330" />
+      <button class="btn primary small" id="lookup-btn">查詢</button>
     </div>
     <nav class="topbar-center">
       <a href="index.html" class="nav-link active">監控</a>
@@ -34,36 +38,37 @@
     </div>
   </header>
 
-  <!-- Main Grid ------------------------------------------------------ -->
+  <!-- Main Grid (v0.5.5 重組) --------------------------------------- -->
   <main class="main">
 
-    <!-- Prediction Hero Row (v0.5 — Math + AI 並排) ------------------ -->
+    <!-- ROW 1 (Hero) -->
     <section class="hero-row">
       <div class="hero-card">
-        <div class="hero-label">系統整體預測成功率(近 30 天)</div>
-        <div class="hero-dual">
-          <div class="hero-side math">
-            <div class="hero-side-label">MATH</div>
-            <div class="hero-value" id="hero-overall">--<span class="pct">%</span></div>
-          </div>
-          <div class="hero-side ai">
-            <div class="hero-side-label">AI</div>
-            <div class="hero-value" id="hero-ai-overall">--<span class="pct">%</span></div>
-          </div>
-        </div>
-        <div class="hero-sub">
-          <span class="trendline" id="hero-trend">▁▁▁▁▁▁▁▁▁▁▁▁</span>
-          <span class="hero-delta" id="hero-delta">--</span>
-        </div>
+        <div class="hero-label">系統整體預測成功率</div>
+        <table class="hero-grid">
+          <tr>
+            <th></th><th class="hg-h">MATH</th><th class="hg-h ai">AI</th>
+          </tr>
+          <tr>
+            <th class="hg-k">累計</th>
+            <td class="hg-v math" id="hero-math-all">--%</td>
+            <td class="hg-v ai"   id="hero-ai-all">--%</td>
+          </tr>
+          <tr>
+            <th class="hg-k">30天</th>
+            <td class="hg-v math" id="hero-math-30">--%</td>
+            <td class="hg-v ai"   id="hero-ai-30">--%</td>
+          </tr>
+        </table>
       </div>
       <div class="hero-stats">
         <div class="hs-cell sb">
-          <span class="hs-label">★★★★★ 強偏多</span>
+          <span class="hs-label">★★★ 強偏多</span>
           <span class="hs-rate" id="hs-sb-rate">--%</span>
           <span class="hs-n" id="hs-sb-n">n=--</span>
         </div>
         <div class="hs-cell b">
-          <span class="hs-label">★★★★ 偏多</span>
+          <span class="hs-label">★★ 偏多</span>
           <span class="hs-rate" id="hs-b-rate">--%</span>
           <span class="hs-n" id="hs-b-n">n=--</span>
         </div>
@@ -85,52 +90,64 @@
       </div>
     </section>
 
-    <!-- KPI Row ------------------------------------------------------ -->
+    <!-- ROW 2 (KPI 5 cards in 6 cols) -->
     <section class="kpi-row">
-      <div class="kpi" id="kpi-mode">
-        <div class="label">系統模式</div>
-        <div class="value s" id="v-mode">--</div>
-        <div class="sub" id="v-mode-sub">&nbsp;</div>
-      </div>
-      <div class="kpi accent" id="kpi-rules">
-        <div class="label">活躍規則</div>
-        <div class="value" id="v-rules">--</div>
-        <div class="sub" id="v-rules-sub">&nbsp;</div>
-      </div>
-      <div class="kpi" id="kpi-signals">
-        <div class="label">今日訊號</div>
-        <div class="value" id="v-signals">--</div>
-        <div class="sub" id="v-signals-sub">&nbsp;</div>
-      </div>
       <div class="kpi" id="kpi-data-date">
         <div class="label">最新資料日</div>
         <div class="value s" id="v-data-date">--</div>
         <div class="sub" id="v-data-date-sub">&nbsp;</div>
       </div>
-      <div class="kpi" id="kpi-version">
-        <div class="label">規則版本</div>
-        <div class="value s" id="v-version">--</div>
-        <div class="sub" id="v-version-sub">&nbsp;</div>
+      <div class="kpi kpi-combo" id="kpi-mode-ver">
+        <div class="combo-row">
+          <span class="combo-key">系統模式</span>
+          <span class="combo-val" id="v-mode">--</span>
+        </div>
+        <div class="combo-row">
+          <span class="combo-key">規則版本</span>
+          <span class="combo-val" id="v-version">--</span>
+        </div>
+        <div class="sub" id="v-mode-sub">&nbsp;</div>
+      </div>
+      <div class="kpi" id="kpi-signals-rules">
+        <div class="label">今日訊號 / 活躍規則</div>
+        <div class="value" id="v-signals-rules">--</div>
+        <div class="sub" id="v-signals-rules-sub">&nbsp;</div>
       </div>
       <div class="kpi" id="kpi-quality">
         <div class="label">資料品質警示 7D</div>
         <div class="value" id="v-quality">--</div>
         <div class="sub" id="v-quality-sub">&nbsp;</div>
       </div>
+      <div class="kpi kpi-ai-report" id="kpi-ai-report">
+        <div class="label">AI 研究摘要 <span class="meta-inline" id="report-meta">--</span></div>
+        <div class="ai-report-body" id="report-body">
+          <div class="empty">讀取中...</div>
+        </div>
+      </div>
     </section>
 
-    <!-- Next Trading Day Predictions Panel (v0.5) -------------------- -->
+    <!-- ROW 3 — predictions (with 2 sub-sections) + signals + rules -->
     <section class="card panel-predictions">
-      <div class="card-head">
-        <span class="title">下次交易日預測 (1D) · Math + AI</span>
-        <span class="meta" id="predictions-meta">--</span>
+      <div class="sub-card">
+        <div class="sub-head">
+          <span class="title">下次交易日預測 (1D) · Math + AI</span>
+          <span class="meta" id="predictions-meta">--</span>
+        </div>
+        <div class="sub-body" id="predictions-body">
+          <div class="empty"><span class="spinner"></span>讀取中...</div>
+        </div>
       </div>
-      <div class="card-body flush" id="predictions-body">
-        <div class="empty"><span class="spinner"></span>讀取中...</div>
+      <div class="sub-card">
+        <div class="sub-head">
+          <span class="title">最近預測驗證結果</span>
+          <span class="meta" id="verifications-meta">--</span>
+        </div>
+        <div class="sub-body" id="verifications-body">
+          <div class="empty"><span class="spinner"></span>讀取中...</div>
+        </div>
       </div>
     </section>
 
-    <!-- Signals Panel ------------------------------------------------ -->
     <section class="card panel-signals">
       <div class="card-head">
         <span class="title">今日訊號</span>
@@ -141,7 +158,6 @@
       </div>
     </section>
 
-    <!-- Rules Panel -------------------------------------------------- -->
     <section class="card panel-rules">
       <div class="card-head">
         <span class="title">規則庫摘要</span>
@@ -151,31 +167,6 @@
         <div class="empty"><span class="spinner"></span>讀取中...</div>
       </div>
     </section>
-
-    <!-- Side Panel (research report + lookup) ----------------------- -->
-    <aside class="panel-side">
-      <div class="card">
-        <div class="card-head">
-          <span class="title">AI 研究摘要</span>
-          <span class="meta" id="report-meta">--</span>
-        </div>
-        <div class="card-body" id="report-body">
-          <div class="empty"><span class="spinner"></span>讀取中...</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-head">
-          <span class="title">單檔查詢</span>
-        </div>
-        <div class="card-body">
-          <div class="input-row">
-            <input type="text" id="symbol-input" placeholder="股票代號 例: 2330" />
-            <button class="btn primary small" id="lookup-btn">查詢</button>
-          </div>
-          <div id="lookup-result" style="margin-top:8px"></div>
-        </div>
-      </div>
-    </aside>
 
   </main>
 

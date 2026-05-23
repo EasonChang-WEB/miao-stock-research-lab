@@ -88,18 +88,18 @@ function directionTag(d) {
     return `<span class="tag muted">— 中性</span>`;
 }
 
-// 5-level confidence badge (v0.4 prediction)
+// 5-level confidence badge (v0.5.4: 縮減星等到最多 ★★★,移除 emoji)
 function confidenceBadge(level, prob) {
     const pct = prob != null ? (Number(prob) * 100).toFixed(0) : "—";
     const map = {
-        strong_bullish: { cls: "sb",  txt: "★★★★★ 強偏多", emoji: "🟢🟢" },
-        bullish:        { cls: "b",   txt: "★★★★ 偏多",    emoji: "🟢"     },
-        neutral:        { cls: "neu", txt: "中性",          emoji: "—"      },
-        bearish:        { cls: "be",  txt: "▼▼ 偏空",       emoji: "🔴"     },
-        strong_bearish: { cls: "sbe", txt: "▼▼▼ 強偏空",    emoji: "🔴🔴" },
+        strong_bullish: { cls: "sb",  txt: "★★★ 強偏多" },
+        bullish:        { cls: "b",   txt: "★★ 偏多"    },
+        neutral:        { cls: "neu", txt: "— 中性"     },
+        bearish:        { cls: "be",  txt: "▼▼ 偏空"    },
+        strong_bearish: { cls: "sbe", txt: "▼▼▼ 強偏空" },
     };
     const m = map[level] || map.neutral;
-    return `<span class="conf-badge ${m.cls}" title="${pct}%">${m.emoji} ${m.txt} ${pct}%</span>`;
+    return `<span class="conf-badge ${m.cls}" title="${pct}%">${m.txt} ${pct}%</span>`;
 }
 
 function hitBadge(isHit) {
@@ -165,26 +165,22 @@ async function loadKPIs() {
     ]);
     updateConnStatus(!!health?.ok, !!health?.database?.ok);
 
+    // v0.5.5: 整合 KPI(系統模式+規則版本 / 今日訊號+活躍規則)
     if (system) {
         setText("v-mode", system.system_mode || "?");
-        setText("v-mode-sub", system.daily_job_enabled
-            ? "排程 ON" : "排程已暫停");
-        $("kpi-mode").className = "kpi " + (system.system_mode === "maintenance" ? "warn" : "");
+        setText("v-version", system.current_rule_version || "?");
+        setText("v-mode-sub", system.daily_job_enabled ? "排程 ON" : "排程已暫停");
 
         setText("v-data-date", fmt.date(system.last_data_date));
         setText("v-data-date-sub", system.last_daily_run_at
             ? fmt.ago(system.last_daily_run_at) : "尚未跑批");
-
-        setText("v-version", system.current_rule_version || "?");
-        setText("v-version-sub", system.last_export_at
-            ? `exported ${fmt.ago(system.last_export_at)}` : "未匯出");
     }
     if (research) {
-        setText("v-rules", research.active_rules ?? "—");
-        setText("v-rules-sub", "active");
-
-        setText("v-signals", research.signals_today ?? 0);
-        setText("v-signals-sub", "today");
+        // 今日訊號 / 活躍規則 → 30 / 36 格式
+        const sig = research.signals_today ?? 0;
+        const rules = research.active_rules ?? "—";
+        setText("v-signals-rules", `${sig} / ${rules}`);
+        setText("v-signals-rules-sub", "今日訊號 / 活躍規則");
 
         const q = research.data_quality_issues_7d || {};
         const qTotal = Object.values(q).reduce((a, b) => a + b, 0);
@@ -415,35 +411,17 @@ async function loadPredictionHero() {
             apiGet("/api/prediction/overall").catch(() => null),
             apiGet("/api/prediction/trend?days=30").catch(() => null),
         ]);
-        if (!overall || !overall.windows) {
-            setText("hero-overall", "—");
-            return;
-        }
+        if (!overall || !overall.windows) return;
         const w = overall.windows;
-        const all = w.all || w["30d"] || w["7d"] || {};
+        const all = w.all || {};
         const w30 = w["30d"] || {};
-        const heroRate = w30.overall_rate != null ? w30.overall_rate : all.overall_rate;
-        const aiRate = w30.ai_overall_rate != null ? w30.ai_overall_rate : all.ai_overall_rate;
-        setHTML("hero-overall", heroRate != null
-            ? (heroRate * 100).toFixed(1) + `<span class="pct">%</span>`
-            : `--<span class="pct">%</span>`);
-        setHTML("hero-ai-overall", aiRate != null
-            ? (aiRate * 100).toFixed(1) + `<span class="pct">%</span>`
-            : `--<span class="pct">%</span>`);
 
-        // delta — Math vs AI (右上小字)
-        const delta = w30.delta_vs_prior_window;
-        const agreement = w30.math_vs_ai_agreement;
-        let deltaParts = [];
-        if (delta != null) {
-            const sign = delta >= 0 ? "+" : "";
-            const cls = delta >= 0 ? "pos" : "neg";
-            deltaParts.push(`<span class="${cls}">vs 前 30D ${sign}${(delta * 100).toFixed(1)}pp</span>`);
-        }
-        if (agreement != null) {
-            deltaParts.push(`<span class="dim">M↔AI 同意 ${(agreement * 100).toFixed(0)}%</span>`);
-        }
-        setHTML("hero-delta", deltaParts.join(" · ") || "");
+        // 4 格:累計/30天 × MATH/AI
+        const fmtPct = (v) => v != null ? (v * 100).toFixed(1) + "%" : "--%";
+        setText("hero-math-all", fmtPct(all.overall_rate));
+        setText("hero-ai-all",   fmtPct(all.ai_overall_rate));
+        setText("hero-math-30",  fmtPct(w30.overall_rate));
+        setText("hero-ai-30",    fmtPct(w30.ai_overall_rate));
 
         // breakdown
         const fillCell = (idRate, idN, src, rateField, nField) => {
@@ -491,18 +469,16 @@ async function loadTodayPredictions() {
             const sigSnip = Array.isArray(p.main_signals) && p.main_signals.length
                 ? p.main_signals.slice(0, 3).map(s => escapeHtml(s.rule_id)).join("·")
                 : "—";
-            // AI 預測欄(v0.5: 移除 AI-M delta 欄,narrative 移到 title hover)
+            // AI 預測欄(v0.5.4: narrative 只放 title hover,不顯示文字)
             const hasAi = p.ai_bullish_prob != null;
             const aiCell = hasAi
-                ? `${confidenceBadge(p.ai_confidence_level, p.ai_bullish_prob)}
-                   <div class="ai-narrative" title="${escapeHtml(p.ai_narrative||'')}">${escapeHtml((p.ai_narrative||'').slice(0,40))}${(p.ai_narrative||'').length>40?'…':''}</div>`
+                ? `<span title="${escapeHtml(p.ai_narrative||'(無 AI 說明)')}">${confidenceBadge(p.ai_confidence_level, p.ai_bullish_prob)}</span>`
                 : `<span class="tag muted">⌛ 待生成</span>`;
             return `<tr>
                 <td class="mono"><strong>${escapeHtml(p.symbol)}</strong></td>
                 <td class="name">${escapeHtml(p.symbol_name || "")}</td>
                 <td>${confidenceBadge(p.confidence_level, p.bullish_prob)}</td>
                 <td>${aiCell}</td>
-                <td>${hitBadge(p.is_hit)} / ${hitBadge(p.ai_is_hit)}</td>
                 <td class="dim" title="${escapeHtml((p.main_signals||[]).map(s=>s.rule_id).join(', '))}">${sigSnip}</td>
                 <td class="dim">${escapeHtml(p.regime_label || "—")}</td>
             </tr>`;
@@ -511,11 +487,47 @@ async function loadTodayPredictions() {
             <thead><tr>
                 <th>代號</th><th>名稱</th>
                 <th>Math 預測</th><th>AI 預測</th>
-                <th>命中(M/AI)</th>
                 <th>主要規則</th><th>市況</th>
             </tr></thead><tbody>${rows}</tbody></table>`);
     } catch (e) {
         setHTML("predictions-body", `<div class="empty">讀取失敗:${escapeHtml(e.message)}</div>`);
+    }
+}
+
+// v0.5.5 — 最近預測驗證結果面板
+async function loadVerifications() {
+    try {
+        const r = await apiGet("/api/predictions/recent-verified?limit=30");
+        setText("verifications-meta", `${r.count || 0} 筆`);
+        const items = r.items || [];
+        if (!items.length) {
+            setHTML("verifications-body", `<div class="empty">尚無已驗證紀錄<br>
+                <span style="font-size:11px">等下次交易日後 T+1 結果會回填</span></div>`);
+            return;
+        }
+        const rows = items.map(v => {
+            const ret = v.actual_return_1d;
+            const retStr = ret != null
+                ? `<span class="${ret > 0 ? 'pos' : ret < 0 ? 'neg' : 'dim'}">${ret > 0 ? '+' : ''}${(ret * 100).toFixed(2)}%</span>`
+                : '—';
+            return `<tr>
+                <td class="mono dim">${fmt.date(v.prediction_date)}</td>
+                <td class="mono"><strong>${escapeHtml(v.symbol)}</strong></td>
+                <td class="name">${escapeHtml(v.symbol_name || "")}</td>
+                <td>${v.confidence_level ? confidenceBadge(v.confidence_level, v.bullish_prob) : '—'}</td>
+                <td>${v.ai_confidence_level ? confidenceBadge(v.ai_confidence_level, v.ai_bullish_prob) : '<span class="tag muted">—</span>'}</td>
+                <td class="num">${retStr}</td>
+                <td>${hitBadge(v.is_hit)} / ${hitBadge(v.ai_is_hit)}</td>
+            </tr>`;
+        }).join("");
+        setHTML("verifications-body", `<table class="data">
+            <thead><tr>
+                <th>預測日</th><th>代號</th><th>名稱</th>
+                <th>Math</th><th>AI</th>
+                <th class="num">實際</th><th>命中(M/AI)</th>
+            </tr></thead><tbody>${rows}</tbody></table>`);
+    } catch (e) {
+        setHTML("verifications-body", `<div class="empty">讀取失敗:${escapeHtml(e.message)}</div>`);
     }
 }
 
@@ -527,6 +539,7 @@ async function refreshAll() {
     try {
         await Promise.all([
             loadKPIs(), loadPredictionHero(), loadTodayPredictions(),
+            loadVerifications(),
             loadSignals(), loadRules(), loadReport(),
         ]);
         lastSuccess = new Date();
