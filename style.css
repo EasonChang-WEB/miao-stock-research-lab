@@ -171,14 +171,16 @@ a:hover { color: var(--accent-bright); }
     overflow: hidden;
 }
 
-/* v0.4 — Hero row (預測成功率) */
+/* v0.5.3 — Hero row 對齊 KPI 6 等分 grid,讓上下兩排寬度一致 */
 .hero-row {
     grid-column: 1 / -1;
     grid-row: 1;
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: repeat(6, 1fr);   /* 跟 KPI 6 等分對齊 */
     gap: 10px;
 }
+.hero-row > .hero-card { grid-column: 1 / 2; }   /* 第 1 格 */
+.hero-row > .hero-stats { grid-column: 2 / 7; }  /* 第 2~6 格(寬 5/6) */
 .hero-card {
     background: linear-gradient(135deg, #1a2230 0%, #15191f 100%);
     border: 1px solid var(--accent-dim);
@@ -199,18 +201,19 @@ a:hover { color: var(--accent-bright); }
 }
 .hero-value {
     font-family: var(--font-mono);
-    font-size: 26px;
+    font-size: 22px;            /* v0.5.3: 縮小,更適應窄欄 */
     font-weight: 700;
     line-height: 1.1;
 }
-.hero-value .pct { font-size: 15px; color: var(--text-1); margin-left: 2px; }
+.hero-value .pct { font-size: 13px; color: var(--text-1); margin-left: 2px; }
 /* v0.5 — Math + AI 並排 */
+/* v0.5.3 — 縮小 gap 適應較窄的 1/6 寬度 */
 .hero-dual {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    gap: 8px;
     align-items: end;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 .hero-side { display: flex; flex-direction: column; gap: 2px; }
 .hero-side-label {
