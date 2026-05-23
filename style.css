@@ -76,11 +76,12 @@ a:hover { color: var(--accent-bright); }
     height: 100vh;
 }
 
-/* Top Bar */
+/* Top Bar (v0.5.7: grid 3-column 穩定 layout) */
 .topbar {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
-    justify-content: space-between;
+    gap: 16px;
     background: linear-gradient(180deg, #181d26 0%, #11151c 100%);
     border-bottom: 1px solid var(--border);
     padding: 0 18px;
@@ -115,18 +116,26 @@ a:hover { color: var(--accent-bright); }
     align-items: center;
 }
 
-/* v0.5.6 — Topbar 左群組(brand + lookup 一起靠左) */
+/* v0.5.7 — Topbar 三區塊 */
 .topbar-left {
     display: flex;
     align-items: center;
-    gap: 20px;
-    flex: 0 0 auto;
+    gap: 18px;
+    justify-self: start;
 }
+.topbar-center {
+    display: flex;
+    gap: 6px;
+    justify-self: center;
+}
+.topbar-right {
+    justify-self: end;
+}
+
 .topbar-lookup {
     display: flex;
     gap: 6px;
     align-items: center;
-    flex-shrink: 0;
 }
 .topbar-lookup input {
     background: var(--bg-2);
@@ -135,39 +144,39 @@ a:hover { color: var(--accent-bright); }
     padding: 5px 10px;
     border-radius: 4px;
     font-size: 12px;
-    width: 200px;
+    width: 180px;
     outline: none;
     transition: border-color .15s;
+    height: 28px;
+    box-sizing: border-box;
 }
 .topbar-lookup input:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(224,164,96,.15);
 }
 .topbar-lookup .btn {
-    white-space: nowrap;     /* v0.5.6:查詢按鈕不換行 */
-    flex-shrink: 0;
+    white-space: nowrap !important;
+    padding: 5px 14px !important;
+    height: 28px;
+    line-height: 1 !important;
+    font-size: 12px !important;
+    min-width: 56px;
+    box-sizing: border-box;
 }
 
-/* v0.5.6 — nav 改 button 樣式 + 真正置中 */
-.topbar-center {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 6px;
-}
-.topbar { position: relative; }   /* 給 absolute 子元素參考 */
+/* nav 改 button 樣式 */
 .nav-btn {
     color: var(--text-2);
-    padding: 6px 18px;
+    padding: 6px 22px;
     border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
-    letter-spacing: .08em;
+    letter-spacing: .12em;
     border: 1px solid var(--border);
     background: var(--bg-2);
     transition: all .12s;
     text-decoration: none;
+    white-space: nowrap;
 }
 .nav-btn:hover {
     background: var(--bg-3);
@@ -176,9 +185,9 @@ a:hover { color: var(--accent-bright); }
 }
 .nav-btn.active {
     color: var(--accent);
-    background: rgba(224,164,96,.12);
+    background: rgba(224,164,96,.15);
     border-color: var(--accent-dim);
-    box-shadow: 0 0 8px rgba(224,164,96,.2);
+    box-shadow: 0 0 10px rgba(224,164,96,.25), inset 0 -2px 0 var(--accent);
 }
 .topbar-right {
     display: flex;
