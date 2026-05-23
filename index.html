@@ -14,21 +14,23 @@
 
 <div class="app">
 
-  <!-- Top Bar (v0.5.5: 加單檔查詢) ---------------------------------- -->
+  <!-- Top Bar (v0.5.6: brand+lookup 一組靠左,nav 置中) ---------------- -->
   <header class="topbar">
-    <div class="brand">
-      <span class="logo">🐾</span>
-      <span class="name">喵掌櫃股票研究所</span>
-      <span class="sep">·</span>
-      <span class="sub">Research Monitor v0.5</span>
-    </div>
-    <div class="topbar-lookup">
-      <input type="text" id="symbol-input" placeholder="🔍 股票代號 例: 2330" />
-      <button class="btn primary small" id="lookup-btn">查詢</button>
+    <div class="topbar-left">
+      <div class="brand">
+        <span class="logo">🐾</span>
+        <span class="name">喵掌櫃股票研究所</span>
+        <span class="sep">·</span>
+        <span class="sub">Research Monitor v0.5</span>
+      </div>
+      <div class="topbar-lookup">
+        <input type="text" id="symbol-input" placeholder="🔍 股票代號 例: 2330" />
+        <button class="btn primary small" id="lookup-btn">查詢</button>
+      </div>
     </div>
     <nav class="topbar-center">
-      <a href="index.html" class="nav-link active">監控</a>
-      <a href="admin.html" class="nav-link">控制台</a>
+      <a href="index.html" class="nav-btn active">監控</a>
+      <a href="admin.html" class="nav-btn">控制台</a>
     </nav>
     <div class="topbar-right">
       <span class="item"><span id="api-dot" class="dot muted"></span><span id="api-label">--</span></span>

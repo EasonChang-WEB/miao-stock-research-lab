@@ -115,13 +115,18 @@ a:hover { color: var(--accent-bright); }
     align-items: center;
 }
 
-/* v0.5.5 — Topbar 內單檔查詢 */
+/* v0.5.6 — Topbar 左群組(brand + lookup 一起靠左) */
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 0 0 auto;
+}
 .topbar-lookup {
     display: flex;
     gap: 6px;
     align-items: center;
-    margin: 0 16px 0 24px;
-    flex: 0 0 auto;
+    flex-shrink: 0;
 }
 .topbar-lookup input {
     background: var(--bg-2);
@@ -137,6 +142,43 @@ a:hover { color: var(--accent-bright); }
 .topbar-lookup input:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(224,164,96,.15);
+}
+.topbar-lookup .btn {
+    white-space: nowrap;     /* v0.5.6:查詢按鈕不換行 */
+    flex-shrink: 0;
+}
+
+/* v0.5.6 — nav 改 button 樣式 + 真正置中 */
+.topbar-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+}
+.topbar { position: relative; }   /* 給 absolute 子元素參考 */
+.nav-btn {
+    color: var(--text-2);
+    padding: 6px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    transition: all .12s;
+    text-decoration: none;
+}
+.nav-btn:hover {
+    background: var(--bg-3);
+    color: var(--text-0);
+    border-color: var(--border-bright);
+}
+.nav-btn.active {
+    color: var(--accent);
+    background: rgba(224,164,96,.12);
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 8px rgba(224,164,96,.2);
 }
 .topbar-right {
     display: flex;
@@ -343,18 +385,19 @@ a:hover { color: var(--accent-bright); }
     color: var(--text-3);
     font-family: var(--font-mono);
 }
+/* v0.5.6 — AI 摘要可往下滑(不再被截掉) */
 .ai-report-body {
     margin-top: 4px;
     font-size: 11.5px;
     color: var(--text-1);
-    line-height: 1.4;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    max-height: 50px;
+    line-height: 1.45;
+    overflow-y: auto;
+    max-height: 56px;
+    padding-right: 4px;
 }
+.ai-report-body::-webkit-scrollbar { width: 5px; }
+.ai-report-body::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+.ai-report-body::-webkit-scrollbar-track { background: transparent; }
 .ai-report-body .findings { margin-bottom: 4px; }
 .ai-report-body .empty { color: var(--text-3); font-size: 11px; }
 
