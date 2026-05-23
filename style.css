@@ -163,7 +163,9 @@ a:hover { color: var(--accent-bright); }
 .main {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: 100px 86px 1fr;  /* v0.5: Hero 高度 80→100,避免 MATH+AI 並排內容溢出 */
+    /* v0.5.2: rows 改 auto,讓 Hero / KPI 自己決定高度,徹底解決重疊
+       第 3 行用 minmax 確保 panels 還有 scroll 空間 */
+    grid-template-rows: auto auto minmax(0, 1fr);
     gap: 10px;
     padding: 10px;
     overflow: hidden;
@@ -181,10 +183,12 @@ a:hover { color: var(--accent-bright); }
     background: linear-gradient(135deg, #1a2230 0%, #15191f 100%);
     border: 1px solid var(--accent-dim);
     border-radius: 8px;
-    padding: 8px 16px;
+    padding: 10px 16px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    gap: 4px;
+    min-height: 84px;
     box-shadow: var(--glow-accent);
 }
 .hero-label {
@@ -246,9 +250,10 @@ a:hover { color: var(--accent-bright); }
     padding: 8px 10px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
     justify-content: center;
     position: relative;
+    min-height: 84px;          /* 統一最小高度,避免長短不齊 */
 }
 /* v0.5 台灣慣例:強偏多=深紅、偏多=淡紅、強偏空=深綠、偏空=淡綠 */
 .hs-cell.sb  { border-left: 3px solid #ef4444; }   /* 強偏多 深紅 */
