@@ -7,7 +7,7 @@ window.MIAO_CONFIG = {
     // 改成 Replit Deployment 給的 URL,例如:
     //   https://miao-stock-research-lab.username.repl.co
     //   https://miao-stock-research-lab.username.replit.app
-    API_BASE: "https://fdd5fe9b-09bd-4ea4-a708-d3d2827d4c4c-00-19edirgjup607.sisko.replit.dev/",
+    API_BASE: "https://your-replit-app.replit.app",
 
     // 預設更新間隔(毫秒)
     AUTO_REFRESH_MS: 60 * 1000,

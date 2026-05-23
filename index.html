@@ -2,88 +2,162 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8" />
-<title>喵掌櫃股票研究所 — 狀態查詢頁</title>
+<title>喵掌櫃股票研究所 · Monitor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="description" content="喵掌櫃股票研究所狀態查詢頁;顯示研究後台是否在線、資料更新與規則版本。所有資訊僅供研究參考。" />
+<meta name="description" content="獨立股票研究後台監控儀表板" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<header class="site-header">
-  <div>
-    <h1>🐾 喵掌櫃股票研究所</h1>
-    <span class="sub">獨立股票研究後台 — 狀態查詢頁</span>
-  </div>
-  <nav class="top-nav">
-    <a href="index.html" class="active">狀態</a>
-    <a href="admin.html">管理</a>
-  </nav>
-</header>
+<div class="app">
 
-<main class="container">
-
-  <section class="section">
-    <h2>系統狀態
-      <span class="muted" style="font-size:13px; font-weight:normal">
-        最後刷新:<span id="last-refresh">—</span>
-      </span>
-      <button id="refresh-btn" class="secondary" style="float:right">手動刷新</button>
-    </h2>
-    <div id="sys-status" class="grid grid-4">
-      <div class="card compact"><span class="spinner"></span>讀取中...</div>
+  <!-- Top Bar ------------------------------------------------------- -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🐾</span>
+      <span class="name">喵掌櫃股票研究所</span>
+      <span class="sep">·</span>
+      <span class="sub">Research Monitor v0.1</span>
     </div>
-  </section>
-
-  <section class="section">
-    <h2>研究任務</h2>
-    <div id="research-status" class="card">
-      <span class="spinner"></span>讀取中...
+    <nav class="topbar-center">
+      <a href="index.html" class="nav-link active">監控</a>
+      <a href="admin.html" class="nav-link">控制台</a>
+    </nav>
+    <div class="topbar-right">
+      <span class="item"><span id="api-dot" class="dot muted"></span><span id="api-label">--</span></span>
+      <span class="item"><span id="db-dot" class="dot muted"></span><span id="db-label">--</span></span>
+      <span class="clock" id="clock">--:--:--</span>
+      <button class="btn small ghost" id="refresh-btn">⟳ Refresh</button>
     </div>
-  </section>
+  </header>
 
-  <section class="section">
-    <h2>規則庫摘要</h2>
-    <div id="rules-summary" class="card">
-      <span class="spinner"></span>讀取中...
-    </div>
-  </section>
+  <!-- Main Grid ------------------------------------------------------ -->
+  <main class="main">
 
-  <section class="section">
-    <h2>今日訊號</h2>
-    <div id="today-signals" class="card">
-      <span class="spinner"></span>讀取中...
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>最新研究報告(AI 摘要)</h2>
-    <div id="latest-report" class="card">
-      <span class="spinner"></span>讀取中...
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>單檔查詢</h2>
-    <div class="card">
-      <div style="display:flex; gap:8px; max-width:480px">
-        <input type="text" id="symbol-input" placeholder="輸入股票代號(例 2330)" />
-        <button id="lookup-btn">查詢</button>
+    <!-- KPI Row ------------------------------------------------------ -->
+    <section class="kpi-row">
+      <div class="kpi" id="kpi-mode">
+        <div class="label">系統模式</div>
+        <div class="value s" id="v-mode">--</div>
+        <div class="sub" id="v-mode-sub">&nbsp;</div>
       </div>
-      <div id="stock-result" style="margin-top:14px"></div>
+      <div class="kpi accent" id="kpi-rules">
+        <div class="label">活躍規則</div>
+        <div class="value" id="v-rules">--</div>
+        <div class="sub" id="v-rules-sub">&nbsp;</div>
+      </div>
+      <div class="kpi" id="kpi-signals">
+        <div class="label">今日訊號</div>
+        <div class="value" id="v-signals">--</div>
+        <div class="sub" id="v-signals-sub">&nbsp;</div>
+      </div>
+      <div class="kpi" id="kpi-features">
+        <div class="label">今日指標</div>
+        <div class="value" id="v-features">--</div>
+        <div class="sub" id="v-features-sub">&nbsp;</div>
+      </div>
+      <div class="kpi" id="kpi-outcomes">
+        <div class="label">5D 完成</div>
+        <div class="value" id="v-outcomes">--</div>
+        <div class="sub" id="v-outcomes-sub">&nbsp;</div>
+      </div>
+      <div class="kpi" id="kpi-data-date">
+        <div class="label">最新資料日</div>
+        <div class="value s" id="v-data-date">--</div>
+        <div class="sub" id="v-data-date-sub">&nbsp;</div>
+      </div>
+      <div class="kpi" id="kpi-version">
+        <div class="label">規則版本</div>
+        <div class="value s" id="v-version">--</div>
+        <div class="sub" id="v-version-sub">&nbsp;</div>
+      </div>
+      <div class="kpi" id="kpi-quality">
+        <div class="label">資料品質警示 7D</div>
+        <div class="value" id="v-quality">--</div>
+        <div class="sub" id="v-quality-sub">&nbsp;</div>
+      </div>
+    </section>
+
+    <!-- Signals Panel ------------------------------------------------ -->
+    <section class="card panel-signals">
+      <div class="card-head">
+        <span class="title">今日訊號</span>
+        <span class="meta" id="signals-meta">--</span>
+      </div>
+      <div class="card-body flush" id="signals-body">
+        <div class="empty"><span class="spinner"></span>讀取中...</div>
+      </div>
+    </section>
+
+    <!-- Rules Panel -------------------------------------------------- -->
+    <section class="card panel-rules">
+      <div class="card-head">
+        <span class="title">規則庫摘要</span>
+        <span class="meta" id="rules-meta">--</span>
+      </div>
+      <div class="card-body flush" id="rules-body">
+        <div class="empty"><span class="spinner"></span>讀取中...</div>
+      </div>
+    </section>
+
+    <!-- Side Panel (research report + lookup) ----------------------- -->
+    <aside class="panel-side">
+      <div class="card">
+        <div class="card-head">
+          <span class="title">AI 研究摘要</span>
+          <span class="meta" id="report-meta">--</span>
+        </div>
+        <div class="card-body" id="report-body">
+          <div class="empty"><span class="spinner"></span>讀取中...</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="title">單檔查詢</span>
+        </div>
+        <div class="card-body">
+          <div class="input-row">
+            <input type="text" id="symbol-input" placeholder="股票代號 例: 2330" />
+            <button class="btn primary small" id="lookup-btn">查詢</button>
+          </div>
+          <div id="lookup-result" style="margin-top:8px"></div>
+          <div class="muted" style="font-size:11px; margin-top:10px; line-height:1.55">
+            本系統結果係根據歷史資料、規則統計與相似情境所做之研究推估,
+            <strong style="color:var(--warn)">僅供資訊參考與風險辨識,不構成任何投資建議。</strong>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Status Bar ----------------------------------------------------- -->
+  <footer class="statusbar">
+    <div class="left">
+      <span class="item"><span class="dot muted"></span> <span id="api-base-label">connecting...</span></span>
+      <span class="item">last update: <span id="last-update" class="mono">--</span></span>
     </div>
-  </section>
+    <div class="right">
+      <span class="item">auto-refresh: <span id="refresh-interval" class="mono">60s</span></span>
+      <span class="item">v0.1 · MVP</span>
+    </div>
+  </footer>
 
-  <div class="disclaimer">
-    <strong>免責聲明</strong>
-    本系統結果係根據歷史資料、規則統計與相似情境所做之研究推估,僅供資訊參考與風險辨識,
-    不構成任何投資建議或交易指示。投資人應自行判斷風險與承擔損益。
+</div>
+
+<!-- Lookup Modal -------------------------------------------------- -->
+<div class="modal-mask" id="lookup-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="title mono" id="lookup-title">--</span>
+      <button class="modal-close" id="lookup-close">×</button>
+    </div>
+    <div class="modal-body" id="lookup-modal-body"></div>
   </div>
-
-</main>
-
-<footer class="site-footer">
-  喵掌櫃股票研究所 v0.1 • 規格書 v1.1 • 研究用途
-</footer>
+</div>
 
 <script src="config.js"></script>
 <script src="script.js"></script>

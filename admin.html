@@ -2,112 +2,168 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8" />
-<title>喵掌櫃股票研究所 — 管理者控制頁</title>
+<title>喵掌櫃股票研究所 · Console</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex,nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
+<style>
+  /* admin-specific layout adjustments */
+  .main.admin-layout {
+    grid-template-rows: 1fr;
+    grid-template-columns: 280px 1fr;
+  }
+  .panel-actions { grid-column: 1; grid-row: 1; overflow: auto; }
+  .panel-monitor { grid-column: 2; grid-row: 1;
+                    display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
+  .group-title {
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 14px 12px 6px;
+  }
+  .group-title:first-child { margin-top: 6px; }
+  .action-list { padding: 0 12px 12px; }
+  .action-list .btn { width: 100%; margin-bottom: 5px; justify-content: flex-start; padding: 7px 10px; }
+  .action-list .btn .icon {
+    color: var(--accent); font-family: var(--font-mono);
+    margin-right: 8px; width: 14px; display: inline-block; text-align: center;
+  }
+</style>
 </head>
 <body>
 
-<header class="site-header">
-  <div>
-    <h1>🐾 喵掌櫃股票研究所 — 管理者控制頁</h1>
-  </div>
-  <nav class="top-nav">
-    <a href="index.html">狀態</a>
-    <a href="admin.html" class="active">管理</a>
-  </nav>
-</header>
+<div class="app">
 
-<!-- Login View -->
-<div id="login-view" class="admin-login">
-  <h2 style="margin-top:0">管理者登入</h2>
-  <p class="muted">請輸入 Replit Secrets 中設定的 <code>ADMIN_TOKEN</code>。</p>
-  <input type="password" id="token-input" placeholder="Admin Token" autocomplete="off" />
-  <div style="margin-top:14px; display:flex; gap:8px">
-    <button id="login-btn" style="flex:1">登入</button>
-    <a class="btn secondary" href="index.html" style="flex:1; text-align:center; line-height:1.5">回狀態頁</a>
+  <!-- Top Bar ------------------------------------------------------- -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🐾</span>
+      <span class="name">喵掌櫃股票研究所</span>
+      <span class="sep">·</span>
+      <span class="sub">Admin Console</span>
+    </div>
+    <nav class="topbar-center">
+      <a href="index.html" class="nav-link">監控</a>
+      <a href="admin.html" class="nav-link active">控制台</a>
+    </nav>
+    <div class="topbar-right">
+      <span class="item"><span id="api-dot" class="dot muted"></span><span>API</span></span>
+      <span class="item"><span id="db-dot" class="dot muted"></span><span>DB</span></span>
+      <span class="clock" id="clock">--:--:--</span>
+      <button class="btn small ghost" id="refresh-all-btn">⟳ Refresh</button>
+      <button class="btn small danger" id="logout-btn" style="display:none">登出</button>
+    </div>
+  </header>
+
+  <!-- Login View ---------------------------------------------------- -->
+  <div id="login-view" class="main" style="display:flex; align-items:flex-start; justify-content:center; padding-top:80px">
+    <div class="login-card">
+      <h2>🔐 管理者登入</h2>
+      <p class="hint">輸入 Replit Secrets 中設定的 <span class="mono" style="color:var(--accent)">ADMIN_TOKEN</span></p>
+      <input type="password" id="token-input" placeholder="Admin Token" autocomplete="off" />
+      <div style="margin-top:14px; display:flex; gap:8px">
+        <button id="login-btn" class="btn primary" style="flex:1">登入</button>
+        <a class="btn ghost" href="index.html" style="flex:1; justify-content:center">回監控</a>
+      </div>
+      <p class="muted" style="margin-top:14px; font-size:11px; line-height:1.55">
+        Token 暫存於 sessionStorage,關閉瀏覽器自動清除。
+        所有操作會寫進 <span class="mono">job_log</span> 留下稽核紀錄。
+      </p>
+    </div>
   </div>
-  <p class="muted" style="margin-top:14px; font-size:12px">
-    Token 暫存於瀏覽器 sessionStorage,關閉視窗自動清除。
-  </p>
+
+  <!-- Admin View ---------------------------------------------------- -->
+  <main id="admin-view" class="main admin-layout" style="display:none">
+
+    <!-- LEFT: Actions sidebar -->
+    <aside class="card panel-actions">
+      <div class="card-head">
+        <span class="title">操作面板</span>
+      </div>
+      <div class="card-body flush">
+
+        <div class="group-title">⚡ 每日流程</div>
+        <div class="action-list">
+          <button class="btn primary" id="act-run-daily"><span class="icon">▶</span>執行每日完整更新</button>
+          <button class="btn" id="act-export-rules"><span class="icon">↑</span>匯出 rules.json</button>
+          <button class="btn" id="act-approve"><span class="icon">✓</span>通過最新 AI 報告</button>
+        </div>
+
+        <div class="group-title">🔧 個別重跑</div>
+        <div class="action-list">
+          <button class="btn" id="act-run-fetch"><span class="icon">↓</span>重抓資料 (近 5 日)</button>
+          <button class="btn" id="act-run-features"><span class="icon">∑</span>重算技術指標</button>
+          <button class="btn" id="act-run-signals"><span class="icon">!</span>重跑訊號</button>
+          <button class="btn" id="act-run-outcomes"><span class="icon">τ</span>回填 outcomes</button>
+          <button class="btn" id="act-run-forecast"><span class="icon">π</span>機率預測 + 校準</button>
+          <button class="btn" id="act-run-eval"><span class="icon">★</span>規則評估</button>
+          <button class="btn" id="act-run-ai"><span class="icon">⚙</span>AI 研究員</button>
+          <button class="btn" id="act-run-backup"><span class="icon">💾</span>立即備份</button>
+        </div>
+
+        <div class="group-title">⏸ 系統模式</div>
+        <div class="action-list">
+          <button class="btn danger" id="act-pause"><span class="icon">⏸</span>暫停每日排程</button>
+          <button class="btn" id="act-resume"><span class="icon">▶</span>恢復每日排程</button>
+          <button class="btn danger" id="act-maintenance-on"><span class="icon">🔧</span>切換維護模式</button>
+          <button class="btn" id="act-maintenance-off"><span class="icon">✓</span>恢復正常模式</button>
+        </div>
+
+        <div class="group-title">⚠ 初始化(僅首次)</div>
+        <div class="action-list">
+          <button class="btn danger" id="act-init-schema"><span class="icon">⚙</span>建立資料表</button>
+          <button class="btn danger" id="act-init-rules"><span class="icon">⚙</span>灌入初始規則</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: System overview + Logs -->
+    <div class="panel-monitor">
+      <!-- 系統狀態卡 -->
+      <section class="card">
+        <div class="card-head">
+          <span class="title">系統狀態</span>
+          <span class="meta" id="status-meta">--</span>
+        </div>
+        <div class="card-body" id="status-body">
+          <div class="empty"><span class="spinner"></span>讀取中...</div>
+        </div>
+      </section>
+
+      <!-- 任務 + 品質 log -->
+      <section class="card">
+        <div class="card-head">
+          <span class="title">即時紀錄</span>
+          <div style="display:flex; gap:6px">
+            <button class="btn small ghost" data-tab="jobs" id="tab-jobs">任務 (job_log)</button>
+            <button class="btn small ghost" data-tab="quality" id="tab-quality">資料品質</button>
+          </div>
+        </div>
+        <div class="card-body flush" id="log-body">
+          <div class="empty"><span class="spinner"></span>讀取中...</div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- Status Bar ----------------------------------------------------- -->
+  <footer class="statusbar">
+    <div class="left">
+      <span class="item"><span id="conn-dot" class="dot muted"></span> <span id="api-base-label">--</span></span>
+    </div>
+    <div class="right">
+      <span class="item"><span id="login-state">未登入</span></span>
+      <span class="item">v0.1 · Admin</span>
+    </div>
+  </footer>
+
 </div>
-
-<!-- Admin View -->
-<main id="admin-view" class="container" style="display:none">
-
-  <section class="section">
-    <h2>系統狀態
-      <span style="float:right">
-        <button id="refresh-all-btn" class="secondary">刷新</button>
-        <button id="logout-btn" class="secondary danger" style="margin-left:6px">登出</button>
-      </span>
-    </h2>
-    <div id="admin-status"><span class="spinner"></span>讀取中...</div>
-  </section>
-
-  <section class="section">
-    <h2>研究任務操作</h2>
-    <div class="card">
-      <div class="admin-actions">
-        <button id="act-run-daily">▶ 執行每日完整更新</button>
-        <button id="act-run-fetch" class="secondary">↻ 重新抓資料(近 5 日)</button>
-        <button id="act-run-features" class="secondary">↻ 重算技術指標</button>
-        <button id="act-run-signals" class="secondary">↻ 重跑訊號</button>
-        <button id="act-run-outcomes" class="secondary">↻ 回填 outcomes</button>
-        <button id="act-run-forecast" class="secondary">↻ 跑機率預測 + 校準</button>
-        <button id="act-run-eval" class="secondary">↻ 規則評估</button>
-        <button id="act-run-ai" class="secondary">🤖 立即執行 AI 研究員</button>
-        <button id="act-run-backup" class="secondary">📦 立即備份</button>
-        <button id="act-export-rules">📤 重新匯出 rules.json</button>
-        <button id="act-approve" class="secondary">✅ 通過最新 AI 報告</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>系統模式</h2>
-    <div class="card">
-      <div class="admin-actions">
-        <button id="act-pause" class="danger">⏸ 暫停每日排程</button>
-        <button id="act-resume">▶ 恢復每日排程</button>
-        <button id="act-maintenance-on" class="danger">🔧 切換維護模式</button>
-        <button id="act-maintenance-off">✅ 恢復正常模式</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>初始化(第一次部署用)</h2>
-    <div class="card">
-      <p class="muted" style="margin-top:0">這兩個按鈕只在第一次部署或重建資料庫時使用。會建立資料表、灌入初始規則。</p>
-      <div class="admin-actions">
-        <button id="act-init-schema" class="danger">⚙ 建立資料表 (schema)</button>
-        <button id="act-init-rules" class="danger">⚙ 灌入 rules_v0.1.json</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>近期任務紀錄 (job_log)</h2>
-    <div id="job-log"><span class="spinner"></span>讀取中...</div>
-  </section>
-
-  <section class="section">
-    <h2>近期資料品質警示 (data_quality_log)</h2>
-    <div id="quality-log"><span class="spinner"></span>讀取中...</div>
-  </section>
-
-  <div class="disclaimer">
-    <strong>注意</strong>
-    本頁所有操作都會寫入 <code>job_log</code>。請避免在交易時段任意觸發重抓 / 重算操作,以免影響資料正確性。
-  </div>
-
-</main>
-
-<footer class="site-footer">
-  喵掌櫃股票研究所 — 管理頁 • 僅限授權人員使用
-</footer>
 
 <script src="config.js"></script>
 <script src="admin.js"></script>
