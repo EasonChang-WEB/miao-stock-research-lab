@@ -76,11 +76,12 @@ a:hover { color: var(--accent-bright); }
     height: 100vh;
 }
 
-/* Top Bar (v0.5.7: grid 3-column 穩定 layout) */
+/* Top Bar (v0.5.8: flex + nav absolute 真正視窗置中) */
 .topbar {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    position: relative;
     gap: 16px;
     background: linear-gradient(180deg, #181d26 0%, #11151c 100%);
     border-bottom: 1px solid var(--border);
@@ -116,20 +117,30 @@ a:hover { color: var(--accent-bright); }
     align-items: center;
 }
 
-/* v0.5.7 — Topbar 三區塊 */
+/* v0.5.8 — Topbar 區塊(brand+lookup 左,nav 絕對置中,status 右) */
 .topbar-left {
     display: flex;
     align-items: center;
     gap: 18px;
-    justify-self: start;
+    flex-shrink: 0;
 }
 .topbar-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     display: flex;
     gap: 6px;
-    justify-self: center;
+    z-index: 5;
 }
 .topbar-right {
-    justify-self: end;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    color: var(--text-2);
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .topbar-lookup {
