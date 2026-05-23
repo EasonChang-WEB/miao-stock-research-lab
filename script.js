@@ -465,33 +465,47 @@ async function loadPredictionHero() {
 async function loadTodayPredictions() {
     try {
         const r = await apiGet("/api/predictions/today");
-        setText("predictions-meta", r.date ? `${fmt.date(r.date)} · ${r.count} 檔` : "—");
+        const basis = r.basis_date, target = r.target_date;
+        const metaTxt = basis
+            ? `基準日 ${fmt.date(basis)} → 目標日 ${target ? fmt.date(target) : "—"} · ${r.count} 檔`
+            : "—";
+        setText("predictions-meta", metaTxt);
         const items = r.items || [];
         if (!items.length) {
-            setHTML("predictions-body", `<div class="empty">尚無今日預測<br>
+            setHTML("predictions-body", `<div class="empty">尚無預測資料<br>
                 <span style="font-size:11px">須先跑 run_daily 或 run-prediction-backfill</span></div>`);
             return;
         }
         const rows = items.map(p => {
-            const sigCount = Array.isArray(p.main_signals) ? p.main_signals.length : 0;
             const sigSnip = Array.isArray(p.main_signals) && p.main_signals.length
                 ? p.main_signals.slice(0, 3).map(s => escapeHtml(s.rule_id)).join("·")
                 : "—";
+            // AI 預測欄
+            const hasAi = p.ai_bullish_prob != null;
+            const aiCell = hasAi
+                ? `${confidenceBadge(p.ai_confidence_level, p.ai_bullish_prob)}
+                   <div class="ai-narrative" title="${escapeHtml(p.ai_narrative||'')}">${escapeHtml((p.ai_narrative||'').slice(0,40))}${(p.ai_narrative||'').length>40?'…':''}</div>`
+                : `<span class="tag muted">⌛ 待生成</span>`;
+            const deltaCell = hasAi && p.ai_vs_math_delta != null
+                ? `<span class="${p.ai_vs_math_delta > 0 ? 'pos' : p.ai_vs_math_delta < 0 ? 'neg' : 'dim'}">${p.ai_vs_math_delta > 0 ? '+' : ''}${(p.ai_vs_math_delta*100).toFixed(0)}pp</span>`
+                : '—';
             return `<tr>
                 <td class="mono"><strong>${escapeHtml(p.symbol)}</strong></td>
+                <td class="name">${escapeHtml(p.symbol_name || "")}</td>
                 <td>${confidenceBadge(p.confidence_level, p.bullish_prob)}</td>
-                <td class="num">${fmt.pct(p.bullish_prob, 0)}</td>
-                <td class="num">${fmt.pct(p.bearish_prob, 0)}</td>
+                <td>${aiCell}</td>
+                <td class="num">${deltaCell}</td>
                 <td class="dim" title="${escapeHtml((p.main_signals||[]).map(s=>s.rule_id).join(', '))}">${sigSnip}</td>
                 <td class="dim">${escapeHtml(p.regime_label || "—")}</td>
-                <td>${hitBadge(p.is_hit)}</td>
+                <td>${hitBadge(p.is_hit)} / ${hitBadge(p.ai_is_hit)}</td>
             </tr>`;
         }).join("");
         setHTML("predictions-body", `<table class="data">
             <thead><tr>
-                <th>代號</th><th>預測 / 信心</th>
-                <th class="num">偏多</th><th class="num">偏空</th>
-                <th>主要規則</th><th>市況</th><th>命中</th>
+                <th>代號</th><th>名稱</th>
+                <th>Math 預測</th><th>AI 預測</th>
+                <th class="num">AI-M</th>
+                <th>主要規則</th><th>市況</th><th>命中(M/AI)</th>
             </tr></thead><tbody>${rows}</tbody></table>`);
     } catch (e) {
         setHTML("predictions-body", `<div class="empty">讀取失敗:${escapeHtml(e.message)}</div>`);

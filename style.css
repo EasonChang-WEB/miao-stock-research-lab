@@ -25,8 +25,12 @@
     --accent-bright: #f5b774;
     --accent-dim: #8a6438;
 
-    --up: #4ade80;
-    --down: #f87171;
+    /* v0.5 — 台灣慣例:漲 = 紅、跌 = 綠 */
+    --up: #f87171;     /* 漲(紅) */
+    --down: #4ade80;   /* 跌(綠) */
+    /* 原始顏色保留供 sparkline / 中性參考 */
+    --tw-red: #f87171;
+    --tw-green: #4ade80;
     --warn: #fbbf24;
     --info: #60a5fa;
     --neutral: #94a3b8;
@@ -229,10 +233,11 @@ a:hover { color: var(--accent-bright); }
     justify-content: center;
     position: relative;
 }
-.hs-cell.sb  { border-left: 3px solid #22d97b; }
-.hs-cell.b   { border-left: 3px solid #4ade80; }
-.hs-cell.sbe { border-left: 3px solid #ef4444; }
-.hs-cell.be  { border-left: 3px solid #f87171; }
+/* v0.5 台灣慣例:強偏多=深紅、偏多=淡紅、強偏空=深綠、偏空=淡綠 */
+.hs-cell.sb  { border-left: 3px solid #ef4444; }   /* 強偏多 深紅 */
+.hs-cell.b   { border-left: 3px solid #f87171; }   /* 偏多 淡紅 */
+.hs-cell.sbe { border-left: 3px solid #22d97b; }   /* 強偏空 深綠 */
+.hs-cell.be  { border-left: 3px solid #4ade80; }   /* 偏空 淡綠 */
 .hs-cell.neu { border-left: 3px solid var(--neutral); }
 
 .hs-label { font-size: 10.5px; color: var(--text-2); letter-spacing: .04em; }
@@ -266,30 +271,43 @@ a:hover { color: var(--accent-bright); }
     white-space: nowrap;
     letter-spacing: .02em;
 }
-.conf-badge.sb {
-    background: rgba(34, 217, 123, .18);
-    color: #4ade80;
-    border: 1px solid rgba(34, 217, 123, .4);
+/* v0.5 台灣慣例 conf-badge:強偏多=深紅、偏多=淡紅、強偏空=深綠、偏空=淡綠 */
+.conf-badge.sb {       /* 強偏多 — 深紅 */
+    background: rgba(239, 68, 68, .18);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, .4);
 }
-.conf-badge.b {
-    background: rgba(74, 222, 128, .12);
-    color: #86efac;
-    border: 1px solid rgba(74, 222, 128, .3);
-}
-.conf-badge.neu {
-    background: rgba(148, 163, 184, .12);
-    color: var(--neutral);
-    border: 1px solid rgba(148, 163, 184, .3);
-}
-.conf-badge.be {
+.conf-badge.b {        /* 偏多 — 淡紅 */
     background: rgba(248, 113, 113, .12);
     color: #fca5a5;
     border: 1px solid rgba(248, 113, 113, .3);
 }
-.conf-badge.sbe {
-    background: rgba(239, 68, 68, .18);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, .4);
+.conf-badge.neu {      /* 中性 — 灰 */
+    background: rgba(148, 163, 184, .12);
+    color: var(--neutral);
+    border: 1px solid rgba(148, 163, 184, .3);
+}
+.conf-badge.be {       /* 偏空 — 淡綠 */
+    background: rgba(74, 222, 128, .12);
+    color: #86efac;
+    border: 1px solid rgba(74, 222, 128, .3);
+}
+.conf-badge.sbe {      /* 強偏空 — 深綠 */
+    background: rgba(34, 217, 123, .18);
+    color: #4ade80;
+    border: 1px solid rgba(34, 217, 123, .4);
+}
+
+/* v0.5 — AI narrative 小字註解 */
+.ai-narrative {
+    font-size: 10.5px;
+    color: var(--text-2);
+    margin-top: 2px;
+    line-height: 1.4;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ---------------------------------------------------------------------
@@ -384,8 +402,9 @@ a:hover { color: var(--accent-bright); }
     background: var(--text-3);
     box-shadow: 0 0 0 2px rgba(0,0,0,.3);
 }
-.dot.up    { background: var(--up);    box-shadow: 0 0 8px rgba(74,222,128,.6); }
-.dot.down  { background: var(--down);  box-shadow: 0 0 8px rgba(248,113,113,.6); }
+/* v0.5 台灣慣例:up=紅(漲), down=綠(跌) — glow 色也對調 */
+.dot.up    { background: var(--up);    box-shadow: 0 0 8px rgba(248,113,113,.6); }
+.dot.down  { background: var(--down);  box-shadow: 0 0 8px rgba(74,222,128,.6); }
 .dot.warn  { background: var(--warn);  box-shadow: 0 0 8px rgba(251,191,36,.6); }
 .dot.info  { background: var(--info);  box-shadow: 0 0 8px rgba(96,165,250,.6); }
 .dot.muted { background: var(--text-3); }
@@ -404,8 +423,9 @@ a:hover { color: var(--accent-bright); }
     border: 1px solid var(--border-bright);
     font-family: var(--font-mono);
 }
-.tag.up      { background: rgba(74,222,128,.12);  color: var(--up);     border-color: rgba(74,222,128,.3); }
-.tag.down    { background: rgba(248,113,113,.12); color: var(--down);   border-color: rgba(248,113,113,.3); }
+/* v0.5 台灣慣例 */
+.tag.up      { background: rgba(248,113,113,.12); color: var(--up);     border-color: rgba(248,113,113,.3); }
+.tag.down    { background: rgba(74,222,128,.12);  color: var(--down);   border-color: rgba(74,222,128,.3); }
 .tag.warn    { background: rgba(251,191,36,.12);  color: var(--warn);   border-color: rgba(251,191,36,.3); }
 .tag.info    { background: rgba(96,165,250,.12);  color: var(--info);   border-color: rgba(96,165,250,.3); }
 .tag.accent  { background: rgba(224,164,96,.12);  color: var(--accent); border-color: rgba(224,164,96,.3); }
