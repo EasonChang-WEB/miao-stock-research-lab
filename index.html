@@ -20,7 +20,7 @@
       <span class="logo">🐾</span>
       <span class="name">喵掌櫃股票研究所</span>
       <span class="sep">·</span>
-      <span class="sub">Research Monitor v0.1</span>
+      <span class="sub">Research Monitor v0.4</span>
     </div>
     <nav class="topbar-center">
       <a href="index.html" class="nav-link active">監控</a>
@@ -36,6 +36,45 @@
 
   <!-- Main Grid ------------------------------------------------------ -->
   <main class="main">
+
+    <!-- Prediction Hero Row (v0.4) ----------------------------------- -->
+    <section class="hero-row">
+      <div class="hero-card">
+        <div class="hero-label">系統整體預測成功率</div>
+        <div class="hero-value" id="hero-overall">--<span class="pct">%</span></div>
+        <div class="hero-sub">
+          <span class="trendline" id="hero-trend">▁▁▁▁▁▁▁▁▁▁▁▁</span>
+          <span class="hero-delta" id="hero-delta">--</span>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hs-cell sb">
+          <span class="hs-label">★★★★★ 強偏多</span>
+          <span class="hs-rate" id="hs-sb-rate">--%</span>
+          <span class="hs-n" id="hs-sb-n">n=--</span>
+        </div>
+        <div class="hs-cell b">
+          <span class="hs-label">★★★★ 偏多</span>
+          <span class="hs-rate" id="hs-b-rate">--%</span>
+          <span class="hs-n" id="hs-b-n">n=--</span>
+        </div>
+        <div class="hs-cell sbe">
+          <span class="hs-label">▼▼▼ 強偏空</span>
+          <span class="hs-rate" id="hs-sbe-rate">--%</span>
+          <span class="hs-n" id="hs-sbe-n">n=--</span>
+        </div>
+        <div class="hs-cell be">
+          <span class="hs-label">▼▼ 偏空</span>
+          <span class="hs-rate" id="hs-be-rate">--%</span>
+          <span class="hs-n" id="hs-be-n">n=--</span>
+        </div>
+        <div class="hs-cell neu">
+          <span class="hs-label">— 中性觀察</span>
+          <span class="hs-rate" id="hs-neu-n">n=--</span>
+          <span class="hs-n">未計入分母</span>
+        </div>
+      </div>
+    </section>
 
     <!-- KPI Row ------------------------------------------------------ -->
     <section class="kpi-row">
@@ -78,6 +117,17 @@
         <div class="label">資料品質警示 7D</div>
         <div class="value" id="v-quality">--</div>
         <div class="sub" id="v-quality-sub">&nbsp;</div>
+      </div>
+    </section>
+
+    <!-- Today Predictions Panel (v0.4) ------------------------------- -->
+    <section class="card panel-predictions">
+      <div class="card-head">
+        <span class="title">今日預測 (1D)</span>
+        <span class="meta" id="predictions-meta">--</span>
+      </div>
+      <div class="card-body flush" id="predictions-body">
+        <div class="empty"><span class="spinner"></span>讀取中...</div>
       </div>
     </section>
 

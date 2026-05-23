@@ -87,6 +87,26 @@ function directionTag(d) {
     if (d === "bearish") return `<span class="tag down">▼ 偏空</span>`;
     return `<span class="tag muted">— 中性</span>`;
 }
+
+// 5-level confidence badge (v0.4 prediction)
+function confidenceBadge(level, prob) {
+    const pct = prob != null ? (Number(prob) * 100).toFixed(0) : "—";
+    const map = {
+        strong_bullish: { cls: "sb",  txt: "★★★★★ 強偏多", emoji: "🟢🟢" },
+        bullish:        { cls: "b",   txt: "★★★★ 偏多",    emoji: "🟢"     },
+        neutral:        { cls: "neu", txt: "中性",          emoji: "—"      },
+        bearish:        { cls: "be",  txt: "▼▼ 偏空",       emoji: "🔴"     },
+        strong_bearish: { cls: "sbe", txt: "▼▼▼ 強偏空",    emoji: "🔴🔴" },
+    };
+    const m = map[level] || map.neutral;
+    return `<span class="conf-badge ${m.cls}" title="${pct}%">${m.emoji} ${m.txt} ${pct}%</span>`;
+}
+
+function hitBadge(isHit) {
+    if (isHit === true) return `<span class="tag up">✅</span>`;
+    if (isHit === false) return `<span class="tag down">❌</span>`;
+    return `<span class="tag muted">⌛</span>`;
+}
 function biasTag(bias) {
     if (!bias) return `<span class="tag muted">—</span>`;
     if (bias.includes("空")) return `<span class="tag down">${escapeHtml(bias)}</span>`;
@@ -298,10 +318,11 @@ async function lookupStock() {
     const resBox = $("lookup-result");
     resBox.innerHTML = `<span class="spinner"></span> 查詢中...`;
     try {
-        const [sum, sigs, fc] = await Promise.all([
+        const [sum, sigs, fc, predHist] = await Promise.all([
             apiGet(`/api/stocks/${sym}/summary`),
             apiGet(`/api/stocks/${sym}/signals`),
             apiGet(`/api/stocks/${sym}/forecast`),
+            apiGet(`/api/predictions/${sym}/history?limit=30`).catch(() => null),
         ]);
         resBox.innerHTML = "";
         if (sum.error) { toast(sum.error, "error"); return; }
@@ -322,6 +343,40 @@ async function lookupStock() {
                 <td class="num ${s.return_20d >= 0 ? 'pos' : 'neg'}">${fmt.pct(s.return_20d)}</td></tr>`).join("");
         setText("lookup-title",
             `${info.symbol} ${info.name}  (${info.category || "?"})`);
+
+        // v0.4 — 個股預測命中率區塊
+        let predBlock = "";
+        if (predHist && predHist.total_verified != null) {
+            const ovr = predHist.overall_rate;
+            const rateColor = ovr >= 0.6 ? "pos" : ovr >= 0.5 ? "" : "neg";
+            const sbRate = predHist.strong_bullish_n
+                ? (predHist.strong_bullish_hit / predHist.strong_bullish_n * 100).toFixed(0) + "%"
+                : "—";
+            const sbeRate = predHist.strong_bearish_n
+                ? (predHist.strong_bearish_hit / predHist.strong_bearish_n * 100).toFixed(0) + "%"
+                : "—";
+            const histRows = (predHist.items || []).slice(0, 12).map(p => `
+                <tr><td class="mono">${fmt.date(p.prediction_date)}</td>
+                    <td>${confidenceBadge(p.confidence_level, p.bullish_prob)}</td>
+                    <td class="num">${fmt.pct(p.actual_return_1d, 2)}</td>
+                    <td>${hitBadge(p.is_hit)}</td></tr>`).join("");
+            predBlock = `
+                <div class="section-title">本檔預測命中率</div>
+                <div class="stat-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:8px">
+                    <div class="row"><span class="k">整體命中</span>
+                        <span class="v ${rateColor}">${fmt.pct(ovr, 1)}</span></div>
+                    <div class="row"><span class="k">強偏多</span>
+                        <span class="v">${sbRate} (${predHist.strong_bullish_n || 0})</span></div>
+                    <div class="row"><span class="k">強偏空</span>
+                        <span class="v">${sbeRate} (${predHist.strong_bearish_n || 0})</span></div>
+                </div>
+                <table class="data">
+                    <thead><tr><th>日期</th><th>預測</th>
+                        <th class="num">實際 1D</th><th>命中</th></tr></thead>
+                    <tbody>${histRows || `<tr><td colspan="4" class="dim">尚無預測紀錄</td></tr>`}</tbody>
+                </table>`;
+        }
+
         setHTML("lookup-modal-body", `
             <div class="stat-grid" style="grid-template-columns:repeat(4,1fr); margin-bottom:12px">
                 <div class="row"><span class="k">收盤</span><span class="v">${lastPx ? fmt.num(lastPx.close) : "—"}</span></div>
@@ -329,6 +384,7 @@ async function lookupStock() {
                 <div class="row"><span class="k">RSI14</span><span class="v">${fmt.num(ft.rsi14, 1)}</span></div>
                 <div class="row"><span class="k">K/D</span><span class="v">${fmt.num(ft.kd_k, 1)} / ${fmt.num(ft.kd_d, 1)}</span></div>
             </div>
+            ${predBlock}
             <div class="section-title">機率預測(最新)</div>
             <table class="data">
                 <thead><tr><th>期間</th><th class="num">上漲</th><th class="num">下跌</th>
@@ -350,6 +406,98 @@ async function lookupStock() {
 // =====================================================================
 // Main loop
 // =====================================================================
+async function loadPredictionHero() {
+    try {
+        const [overall, trend] = await Promise.all([
+            apiGet("/api/prediction/overall").catch(() => null),
+            apiGet("/api/prediction/trend?days=30").catch(() => null),
+        ]);
+        if (!overall || !overall.windows) {
+            setText("hero-overall", "—");
+            return;
+        }
+        const w = overall.windows;
+        const all = w.all || w["30d"] || w["7d"] || {};
+        const rate30 = (w["30d"] || {}).overall_rate;
+        const heroRate = rate30 != null ? rate30 : all.overall_rate;
+        setHTML("hero-overall", heroRate != null
+            ? (heroRate * 100).toFixed(1) + `<span class="pct">%</span>`
+            : "—");
+
+        // delta
+        const delta = (w["30d"] || {}).delta_vs_prior_window;
+        if (delta != null) {
+            const sign = delta >= 0 ? "+" : "";
+            const cls = delta >= 0 ? "pos" : "neg";
+            setHTML("hero-delta", `<span class="${cls}">vs 前 30 天 ${sign}${(delta * 100).toFixed(1)}pp</span>`);
+        } else {
+            setText("hero-delta", "");
+        }
+
+        // breakdown
+        const fillCell = (idRate, idN, src, rateField, nField) => {
+            const rate = src[rateField], n = src[nField];
+            setText(idRate, rate != null ? (rate * 100).toFixed(1) + "%" : "—");
+            setText(idN, "n=" + (n ?? 0));
+        };
+        fillCell("hs-sb-rate",  "hs-sb-n",  all, "strong_bullish_rate", "strong_bullish_n");
+        fillCell("hs-b-rate",   "hs-b-n",   all, "bullish_rate",        "bullish_n");
+        fillCell("hs-sbe-rate", "hs-sbe-n", all, "strong_bearish_rate", "strong_bearish_n");
+        fillCell("hs-be-rate",  "hs-be-n",  all, "bearish_rate",        "bearish_n");
+        setText("hs-neu-n", "n=" + (all.neutral_observations ?? 0));
+
+        // sparkline
+        if (trend && trend.items?.length) {
+            const blocks = ["▁","▂","▃","▄","▅","▆","▇","█"];
+            const pts = trend.items.map(t => t.overall_rate).filter(x => x != null);
+            if (pts.length) {
+                const min = Math.min(...pts), max = Math.max(...pts);
+                const range = max - min || 0.01;
+                const spark = pts.map(p => blocks[Math.min(7, Math.floor((p - min) / range * 8))]).join("");
+                setText("hero-trend", spark);
+            }
+        }
+    } catch (e) {
+        console.warn("hero prediction failed:", e);
+    }
+}
+
+async function loadTodayPredictions() {
+    try {
+        const r = await apiGet("/api/predictions/today");
+        setText("predictions-meta", r.date ? `${fmt.date(r.date)} · ${r.count} 檔` : "—");
+        const items = r.items || [];
+        if (!items.length) {
+            setHTML("predictions-body", `<div class="empty">尚無今日預測<br>
+                <span style="font-size:11px">須先跑 run_daily 或 run-prediction-backfill</span></div>`);
+            return;
+        }
+        const rows = items.map(p => {
+            const sigCount = Array.isArray(p.main_signals) ? p.main_signals.length : 0;
+            const sigSnip = Array.isArray(p.main_signals) && p.main_signals.length
+                ? p.main_signals.slice(0, 3).map(s => escapeHtml(s.rule_id)).join("·")
+                : "—";
+            return `<tr>
+                <td class="mono"><strong>${escapeHtml(p.symbol)}</strong></td>
+                <td>${confidenceBadge(p.confidence_level, p.bullish_prob)}</td>
+                <td class="num">${fmt.pct(p.bullish_prob, 0)}</td>
+                <td class="num">${fmt.pct(p.bearish_prob, 0)}</td>
+                <td class="dim" title="${escapeHtml((p.main_signals||[]).map(s=>s.rule_id).join(', '))}">${sigSnip}</td>
+                <td class="dim">${escapeHtml(p.regime_label || "—")}</td>
+                <td>${hitBadge(p.is_hit)}</td>
+            </tr>`;
+        }).join("");
+        setHTML("predictions-body", `<table class="data">
+            <thead><tr>
+                <th>代號</th><th>預測 / 信心</th>
+                <th class="num">偏多</th><th class="num">偏空</th>
+                <th>主要規則</th><th>市況</th><th>命中</th>
+            </tr></thead><tbody>${rows}</tbody></table>`);
+    } catch (e) {
+        setHTML("predictions-body", `<div class="empty">讀取失敗:${escapeHtml(e.message)}</div>`);
+    }
+}
+
 async function refreshAll() {
     if (!API_BASE) {
         showConnError({ message: "API_BASE 未設定" });
@@ -357,7 +505,8 @@ async function refreshAll() {
     }
     try {
         await Promise.all([
-            loadKPIs(), loadSignals(), loadRules(), loadReport(),
+            loadKPIs(), loadPredictionHero(), loadTodayPredictions(),
+            loadSignals(), loadRules(), loadReport(),
         ]);
         lastSuccess = new Date();
         setText("last-update", lastSuccess.toLocaleTimeString());
