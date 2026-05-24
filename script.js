@@ -581,6 +581,136 @@ function tickClock() {
     setText("clock", d.toLocaleTimeString("zh-TW", { hour12: false }));
 }
 
+// =====================================================================
+// v0.7.2 — 歷史預測查詢
+// =====================================================================
+function _aiDirCell(it) {
+    if (!it.ai_direction || it.ai_direction === "neutral") {
+        return `<span class="tag muted">— 中性</span>`;
+    }
+    return directionTag(it.ai_direction);
+}
+function _hitCell(v) {
+    if (v === true)  return `<span class="hit-ok">✓ 對</span>`;
+    if (v === false) return `<span class="hit-bad">✗ 錯</span>`;
+    return `<span class="hit-na">—</span>`;
+}
+function _actualCell(it) {
+    const d = it.actual_direction, r = it.actual_return_1d;
+    const arrow = d === "up" ? "↑" : d === "down" ? "↓" : "→";
+    const cls = d === "up" ? "pos" : d === "down" ? "neg" : "dim";
+    const pct = r != null ? `${r > 0 ? "+" : ""}${(r * 100).toFixed(2)}%` : "—";
+    return `<span class="tag ${cls}">${arrow} ${pct}</span>`;
+}
+function _rowQuadrantClass(it) {
+    if (it.is_hit === null || it.ai_is_hit === null) return "";
+    if (it.direction === "neutral" || it.ai_direction === "neutral") return "";
+    if (it.is_hit && it.ai_is_hit)         return "row-consensus";
+    if (!it.is_hit && !it.ai_is_hit)       return "row-both-miss";
+    if (it.is_hit && !it.ai_is_hit)        return "row-math-only";
+    return "row-ai-only";
+}
+
+async function loadHistory(date) {
+    const dateEl = $("hist-date");
+    const useDate = date || dateEl.value;
+    setHTML("hist-body", `<div class="empty"><span class="spinner"></span>查詢 ${escapeHtml(useDate || "(最新)")} ...</div>`);
+    try {
+        const q = useDate ? `?date=${encodeURIComponent(useDate)}` : "";
+        const r = await apiGet(`/api/prediction/by-date${q}`);
+        if (r.error) {
+            setHTML("hist-body", `<div class="empty">${escapeHtml(r.error)}</div>`);
+            return;
+        }
+        // Update date input
+        dateEl.value = r.date;
+        // Update chips
+        const chips = (r.available_dates || []).slice(0, 6).map(d => {
+            const cls = d === r.date ? "chip active" : "chip";
+            return `<button class="${cls}" data-d="${d}">${d}</button>`;
+        }).join("");
+        setHTML("hist-chips", chips);
+        document.querySelectorAll("#hist-chips .chip").forEach(b =>
+            b.addEventListener("click", () => loadHistory(b.dataset.d)));
+
+        // Summary
+        const mathSt = r.math || {}, aiSt = r.ai || {}, qd = r.quadrant || {};
+        setText("hist-math-hit", mathSt.hit_rate != null
+            ? `${(mathSt.hit_rate * 100).toFixed(1)}% (${mathSt.hit}/${mathSt.directional_n})`
+            : `—  (${mathSt.directional_n || 0} 檔)`);
+        setText("hist-ai-hit", aiSt.hit_rate != null
+            ? `${(aiSt.hit_rate * 100).toFixed(1)}% (${aiSt.hit}/${aiSt.directional_n})`
+            : `—  (${aiSt.directional_n || 0} 檔)`);
+        setText("hist-consensus", `${qd.consensus_hit ?? 0} / ${qd.both_directional_n ?? 0}`);
+        setText("hist-math-only", qd.math_only ?? 0);
+        setText("hist-ai-only", qd.ai_only ?? 0);
+        setText("hist-both-miss", qd.both_miss ?? 0);
+
+        // Table
+        const items = r.items || [];
+        if (!items.length) {
+            setHTML("hist-body", `<div class="empty">該日無預測資料</div>`);
+            return;
+        }
+        const rows = items.map((p, idx) => {
+            const cls = _rowQuadrantClass(p);
+            const sigSnip = Array.isArray(p.main_signals) && p.main_signals.length
+                ? p.main_signals.slice(0, 2).map(s => escapeHtml(s.rule_id || "")).join("·")
+                : "—";
+            const aiProb = p.ai_bullish_prob != null
+                ? (Number(p.ai_bullish_prob) * 100).toFixed(0) + "%"
+                : "—";
+            const narr = p.ai_narrative
+                ? `<tr class="narr-row hidden" data-idx="${idx}"><td colspan="9"><div class="narr-box">💬 ${escapeHtml(p.ai_narrative)}</div></td></tr>`
+                : "";
+            const expandBtn = p.ai_narrative
+                ? `<button class="narr-toggle" data-idx="${idx}" title="展開 AI 說明">▸</button>`
+                : "";
+            return `
+              <tr class="${cls}">
+                <td class="mono"><strong>${escapeHtml(p.symbol)}</strong></td>
+                <td class="name">${escapeHtml(p.symbol_name || "")}</td>
+                <td>${directionTag(p.direction)}</td>
+                <td>${_aiDirCell(p)}</td>
+                <td class="num dim">${aiProb}</td>
+                <td>${_actualCell(p)}</td>
+                <td>${_hitCell(p.is_hit)}</td>
+                <td>${_hitCell(p.ai_is_hit)}</td>
+                <td class="dim">${expandBtn}<span class="dim" title="${escapeHtml((p.main_signals||[]).map(s=>s.rule_id).join(', '))}">${escapeHtml(p.regime_label || "—")} · ${sigSnip}</span></td>
+              </tr>
+              ${narr}`;
+        }).join("");
+
+        setHTML("hist-body", `<table class="data hist-table">
+            <thead><tr>
+                <th>代號</th><th>名稱</th>
+                <th>Math</th><th>AI</th><th class="num">AI 機率</th>
+                <th>實際</th><th>M 命中</th><th>AI 命中</th>
+                <th>市況 / 訊號</th>
+            </tr></thead><tbody>${rows}</tbody></table>`);
+
+        // Wire narrative toggles
+        document.querySelectorAll(".narr-toggle").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const idx = e.target.dataset.idx;
+                const row = document.querySelector(`.narr-row[data-idx="${idx}"]`);
+                if (row) {
+                    row.classList.toggle("hidden");
+                    e.target.textContent = row.classList.contains("hidden") ? "▸" : "▾";
+                }
+            });
+        });
+    } catch (e) {
+        setHTML("hist-body", `<div class="empty">讀取失敗:${escapeHtml(e.message)}</div>`);
+    }
+}
+
+function openHistoryModal() {
+    $("history-modal").classList.add("show");
+    // 預設帶最新日期
+    if (!$("hist-date").value) loadHistory();
+}
+
 window.addEventListener("DOMContentLoaded", () => {
     setText("api-base-label", API_BASE || "API_BASE 未設定");
     setText("refresh-interval", `${REFRESH_MS / 1000}s`);
@@ -605,5 +735,19 @@ window.addEventListener("DOMContentLoaded", () => {
         if (e.target.id === "lookup-modal") {
             $("lookup-modal").classList.remove("show");
         }
+    });
+    // v0.7.2 — 歷史預測 modal
+    $("history-btn")?.addEventListener("click", openHistoryModal);
+    $("history-close")?.addEventListener("click", () => {
+        $("history-modal").classList.remove("show");
+    });
+    $("history-modal")?.addEventListener("click", e => {
+        if (e.target.id === "history-modal") {
+            $("history-modal").classList.remove("show");
+        }
+    });
+    $("hist-query-btn")?.addEventListener("click", () => loadHistory());
+    $("hist-date")?.addEventListener("keydown", e => {
+        if (e.key === "Enter") loadHistory();
     });
 });

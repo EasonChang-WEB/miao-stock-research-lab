@@ -26,6 +26,7 @@
       <div class="topbar-lookup">
         <input type="text" id="symbol-input" placeholder="🔍 股票代號 例: 2330" />
         <button class="btn primary small" id="lookup-btn">查詢</button>
+        <button class="btn small ghost" id="history-btn" title="查詢任一天的預測與結果">📅 歷史預測</button>
       </div>
     </div>
     <nav class="topbar-center">
@@ -222,6 +223,56 @@
       <button class="modal-close" id="lookup-close">×</button>
     </div>
     <div class="modal-body" id="lookup-modal-body"></div>
+  </div>
+</div>
+
+<!-- History Prediction Modal (v0.7.2) ----------------------------- -->
+<div class="modal-mask" id="history-modal">
+  <div class="modal wide">
+    <div class="modal-head">
+      <span class="title">📅 歷史預測查詢</span>
+      <button class="modal-close" id="history-close">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Date picker + chips -->
+      <div class="hist-controls">
+        <label class="hist-label">日期</label>
+        <input type="date" id="hist-date" />
+        <button class="btn primary small" id="hist-query-btn">查詢</button>
+        <span class="hist-chips" id="hist-chips"></span>
+      </div>
+      <!-- Quadrant summary card -->
+      <div class="hist-summary" id="hist-summary">
+        <div class="hs-stat">
+          <span class="hs-k">Math 命中</span>
+          <span class="hs-v" id="hist-math-hit">--</span>
+        </div>
+        <div class="hs-stat">
+          <span class="hs-k">AI 命中</span>
+          <span class="hs-v" id="hist-ai-hit">--</span>
+        </div>
+        <div class="hs-stat consensus">
+          <span class="hs-k">共識✓</span>
+          <span class="hs-v" id="hist-consensus">--</span>
+        </div>
+        <div class="hs-stat math-only">
+          <span class="hs-k">M對</span>
+          <span class="hs-v" id="hist-math-only">--</span>
+        </div>
+        <div class="hs-stat ai-only">
+          <span class="hs-k">AI對</span>
+          <span class="hs-v" id="hist-ai-only">--</span>
+        </div>
+        <div class="hs-stat both-miss">
+          <span class="hs-k">雙錯</span>
+          <span class="hs-v" id="hist-both-miss">--</span>
+        </div>
+      </div>
+      <!-- Table -->
+      <div id="hist-body">
+        <div class="empty">選擇日期後按查詢</div>
+      </div>
+    </div>
   </div>
 </div>
 
