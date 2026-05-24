@@ -62,6 +62,7 @@
             <td class="hg-v ai"   id="hero-ai-30">--%</td>
           </tr>
         </table>
+        <div class="hero-sample" id="hero-sample-info">樣本 -- · 不含中性</div>
       </div>
       <div class="hero-stats">
         <div class="hs-cell sb">
@@ -89,6 +90,30 @@
           <span class="hs-rate" id="hs-neu-n">n=--</span>
           <span class="hs-n">未計入分母</span>
         </div>
+      </div>
+    </section>
+
+    <!-- ROW 1.5 (v0.6 — Math × AI 四象限) -->
+    <section class="quadrant-row">
+      <div class="qd-cell consensus">
+        <span class="qd-label">共識命中率</span>
+        <span class="qd-val" id="quadrant-consensus">--%</span>
+        <span class="qd-help">M+AI 都對</span>
+      </div>
+      <div class="qd-cell ai-correct">
+        <span class="qd-label">AI 修正價值</span>
+        <span class="qd-val" id="quadrant-ai-correction">--%</span>
+        <span class="qd-help">M 錯但 AI 對 / 總分歧</span>
+      </div>
+      <div class="qd-cell disagree">
+        <span class="qd-label">M ↔ AI 分歧率</span>
+        <span class="qd-val" id="quadrant-disagree">--%</span>
+        <span class="qd-help">兩邊意見不同的比例</span>
+      </div>
+      <div class="qd-cell both-miss">
+        <span class="qd-label">共同盲點</span>
+        <span class="qd-val" id="quadrant-both-miss-n">--/--</span>
+        <span class="qd-help">M+AI 都錯 / 雙方有方向總數</span>
       </div>
     </section>
 

@@ -249,12 +249,46 @@ a:hover { color: var(--accent-bright); }
 .main {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    /* v0.5.2: rows 改 auto,讓 Hero / KPI 自己決定高度,徹底解決重疊
-       第 3 行用 minmax 確保 panels 還有 scroll 空間 */
-    grid-template-rows: auto auto minmax(0, 1fr);
+    /* v0.6: 4 rows (hero / quadrant / kpi / panels) */
+    grid-template-rows: auto auto auto minmax(0, 1fr);
     gap: 10px;
     padding: 10px;
     overflow: hidden;
+}
+
+/* v0.6 — Math × AI 四象限橫條 */
+.quadrant-row {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+.qd-cell {
+    background: linear-gradient(135deg, #161d28 0%, #131820 100%);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.qd-cell.consensus  { border-left: 3px solid #a78bfa; }
+.qd-cell.ai-correct { border-left: 3px solid #fbbf24; }
+.qd-cell.disagree   { border-left: 3px solid #f87171; }
+.qd-cell.both-miss  { border-left: 3px solid #6b7280; }
+.qd-label { font-size: 10.5px; color: var(--text-2); letter-spacing: .06em; }
+.qd-val   { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-0); line-height: 1.1; }
+.qd-cell.consensus  .qd-val { color: #a78bfa; }
+.qd-cell.ai-correct .qd-val { color: #fbbf24; }
+.qd-cell.disagree   .qd-val { color: #f87171; }
+.qd-help  { font-size: 10px; color: var(--text-3); }
+
+.hero-sample {
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 4px;
+    font-family: var(--font-mono);
 }
 
 /* v0.5.3 — Hero row 對齊 KPI 6 等分 grid,讓上下兩排寬度一致 */
@@ -371,10 +405,10 @@ a:hover { color: var(--accent-bright); }
              font-weight: 600; color: var(--text-0); }
 .hs-n     { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); }
 
-/* KPI row (v0.5.5 — 5 cards in 6 cols,AI 摘要佔 2) */
+/* KPI row (v0.6 — 移到 row 3) */
 .kpi-row {
     grid-column: 1 / -1;
-    grid-row: 2;
+    grid-row: 3;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 10px;
@@ -421,10 +455,10 @@ a:hover { color: var(--accent-bright); }
 .ai-report-body .findings { margin-bottom: 4px; }
 .ai-report-body .empty { color: var(--text-3); font-size: 11px; }
 
-/* Content panels (v0.5.5: 移除 panel-side,predictions 拓寬,分 2 sub-card) */
+/* Content panels (v0.6: 移到 row 4) */
 .panel-predictions {
     grid-column: 1 / 6;
-    grid-row: 3;
+    grid-row: 4;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -434,8 +468,8 @@ a:hover { color: var(--accent-bright); }
     overflow: hidden;
     box-shadow: var(--shadow-sm);
 }
-.panel-signals     { grid-column: 6 / 9;  grid-row: 3; }
-.panel-rules       { grid-column: 9 / 13; grid-row: 3; }
+.panel-signals     { grid-column: 6 / 9;  grid-row: 4; }
+.panel-rules       { grid-column: 9 / 13; grid-row: 4; }
 
 /* 預測 panel 內的 sub-card(上下分:下次預測 / 驗證結果) */
 .sub-card {

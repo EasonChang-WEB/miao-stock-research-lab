@@ -407,9 +407,9 @@ async function lookupStock() {
 // =====================================================================
 async function loadPredictionHero() {
     try {
-        const [overall, trend] = await Promise.all([
+        const [overall, quadrant] = await Promise.all([
             apiGet("/api/prediction/overall").catch(() => null),
-            apiGet("/api/prediction/trend?days=30").catch(() => null),
+            apiGet("/api/prediction/quadrant").catch(() => null),
         ]);
         if (!overall || !overall.windows) return;
         const w = overall.windows;
@@ -422,6 +422,23 @@ async function loadPredictionHero() {
         setText("hero-ai-all",   fmtPct(all.ai_overall_rate));
         setText("hero-math-30",  fmtPct(w30.overall_rate));
         setText("hero-ai-30",    fmtPct(w30.ai_overall_rate));
+
+        // v0.6 加 樣本量 + 統計口徑說明 在 hero-sub
+        const sampN = all.total_predictions ?? 0;
+        const aiVerified = all.ai_total_predictions ?? 0;
+        setText("hero-sample-info",
+            `樣本 ${sampN} 已驗證 · AI 跑完率 ${sampN ? Math.round(aiVerified/sampN*100) : 0}% · 不含中性`);
+
+        // v0.6 Math × AI 四象限
+        if (quadrant && quadrant.windows) {
+            const qa = quadrant.windows.all || {};
+            const setQ = (id, v) => setText(id, v != null ? (v * 100).toFixed(1) + "%" : "--%");
+            setQ("quadrant-consensus", qa.consensus_hit_rate);
+            setQ("quadrant-ai-correction", qa.ai_correction_value);
+            setQ("quadrant-disagree", qa.disagreement_rate);
+            setText("quadrant-both-miss-n",
+                `共同盲點 ${qa.quadrant_both_miss ?? 0}/${qa.both_directional_n ?? 0}`);
+        }
 
         // breakdown
         const fillCell = (idRate, idN, src, rateField, nField) => {
@@ -510,6 +527,14 @@ async function loadVerifications() {
             const retStr = ret != null
                 ? `<span class="${ret > 0 ? 'pos' : ret < 0 ? 'neg' : 'dim'}">${ret > 0 ? '+' : ''}${(ret * 100).toFixed(2)}%</span>`
                 : '—';
+            // v0.6 分歧標籤
+            let diffTag = '';
+            if (v.is_hit !== null && v.ai_is_hit !== null) {
+                if (v.is_hit && v.ai_is_hit)        diffTag = '<span class="tag" style="background:rgba(167,139,250,.15);color:#a78bfa">共識✓</span>';
+                else if (!v.is_hit && !v.ai_is_hit) diffTag = '<span class="tag" style="background:rgba(107,114,128,.15);color:#9ca3af">共識✗</span>';
+                else if (v.is_hit && !v.ai_is_hit)  diffTag = '<span class="tag" style="background:rgba(74,222,128,.15);color:#86efac">M對</span>';
+                else                                 diffTag = '<span class="tag" style="background:rgba(251,191,36,.15);color:#fbbf24">AI對</span>';
+            }
             return `<tr>
                 <td class="mono dim">${fmt.date(v.prediction_date)}</td>
                 <td class="mono"><strong>${escapeHtml(v.symbol)}</strong></td>
@@ -518,13 +543,14 @@ async function loadVerifications() {
                 <td>${v.ai_confidence_level ? confidenceBadge(v.ai_confidence_level, v.ai_bullish_prob) : '<span class="tag muted">—</span>'}</td>
                 <td class="num">${retStr}</td>
                 <td>${hitBadge(v.is_hit)} / ${hitBadge(v.ai_is_hit)}</td>
+                <td>${diffTag}</td>
             </tr>`;
         }).join("");
         setHTML("verifications-body", `<table class="data">
             <thead><tr>
                 <th>預測日</th><th>代號</th><th>名稱</th>
                 <th>Math</th><th>AI</th>
-                <th class="num">實際</th><th>命中(M/AI)</th>
+                <th class="num">實際</th><th>命中</th><th>分歧</th>
             </tr></thead><tbody>${rows}</tbody></table>`);
     } catch (e) {
         setHTML("verifications-body", `<div class="empty">讀取失敗:${escapeHtml(e.message)}</div>`);
