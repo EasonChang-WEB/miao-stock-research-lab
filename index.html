@@ -44,26 +44,30 @@
   <!-- Main Grid (v0.5.5 重組) --------------------------------------- -->
   <main class="main">
 
-    <!-- ROW 1 (Hero) -->
+    <!-- ROW 1 (Hero) — v0.9.2 改用合議系統 final_hit_rate -->
     <section class="hero-row">
       <div class="hero-card">
-        <div class="hero-label">系統整體預測成功率</div>
+        <div class="hero-label">
+          合議系統成功率 <span class="hero-badge">v0.8.2</span>
+        </div>
         <table class="hero-grid">
           <tr>
-            <th></th><th class="hg-h">MATH</th><th class="hg-h ai">AI</th>
+            <th></th><th class="hg-h">合議</th><th class="hg-h">方向感</th>
           </tr>
           <tr>
             <th class="hg-k">累計</th>
-            <td class="hg-v math" id="hero-math-all">--%</td>
-            <td class="hg-v ai"   id="hero-ai-all">--%</td>
+            <td class="hg-v final" id="hero-final-all">--%</td>
+            <td class="hg-v ai"    id="hero-dir-all">--%</td>
           </tr>
           <tr>
             <th class="hg-k">30天</th>
-            <td class="hg-v math" id="hero-math-30">--%</td>
-            <td class="hg-v ai"   id="hero-ai-30">--%</td>
+            <td class="hg-v final" id="hero-final-30">--%</td>
+            <td class="hg-v ai"    id="hero-dir-30">--%</td>
           </tr>
         </table>
-        <div class="hero-sample" id="hero-sample-info">樣本 -- · 不含中性</div>
+        <div class="hero-sample" id="hero-sample-info">
+          樣本 -- · 中性納入分母 · 僅作研究參考
+        </div>
       </div>
       <div class="hero-stats">
         <div class="hs-cell sb">
@@ -115,6 +119,20 @@
         <span class="qd-label">共同盲點</span>
         <span class="qd-val" id="quadrant-both-miss-n">--/--</span>
         <span class="qd-help">M+AI 都錯 / 雙方有方向總數</span>
+      </div>
+    </section>
+
+    <!-- ROW 1.7 (v0.9.2 — strong_disagreement 警示卡) -->
+    <section class="card panel-disagree" id="panel-disagree">
+      <div class="card-head">
+        <span class="title">⚠️ 強烈分歧警示</span>
+        <span class="meta" id="disagree-meta">--</span>
+      </div>
+      <div class="card-body" id="disagree-body">
+        <div class="empty"><span class="spinner"></span>讀取中...</div>
+      </div>
+      <div class="card-foot disagree-foot">
+        Math 與 AI 意見強烈衝突 → 較可能呈現震盪或反轉,僅作風險辨識,不視為高勝率預測。
       </div>
     </section>
 
