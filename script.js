@@ -165,36 +165,26 @@ async function loadKPIs() {
     ]);
     updateConnStatus(!!health?.ok, !!health?.database?.ok);
 
-    // v0.5.5: 整合 KPI(系統模式+規則版本 / 今日訊號+活躍規則)
+    // v0.9.3: 整合 KPI → footer 一行小字
     if (system) {
-        setText("v-mode", system.system_mode || "?");
-        setText("v-version", system.current_rule_version || "?");
-        setText("v-mode-sub", system.daily_job_enabled ? "排程 ON" : "排程已暫停");
-
-        setText("v-data-date", fmt.date(system.last_data_date));
-        setText("v-data-date-sub", system.last_daily_run_at
-            ? fmt.ago(system.last_daily_run_at) : "尚未跑批");
+        setText("sb-data-date", fmt.date(system.last_data_date));
+        setText("sb-mode", system.system_mode || "?");
+        setText("sb-version", system.current_rule_version || "?");
     }
     if (research) {
-        // 今日訊號 / 活躍規則 → 30 / 36 格式
         const sig = research.signals_today ?? 0;
         const rules = research.active_rules ?? "—";
-        setText("v-signals-rules", `${sig} / ${rules}`);
-        setText("v-signals-rules-sub", "今日訊號 / 活躍規則");
+        setText("sb-signals", `${sig}/${rules}`);
 
         const q = research.data_quality_issues_7d || {};
         const qTotal = Object.values(q).reduce((a, b) => a + b, 0);
-        setText("v-quality", qTotal);
-        $("kpi-quality").className = "kpi " + (qTotal > 0 ? "warn" : "good");
-        const issues = Object.keys(q).length ? Object.entries(q).map(([k, v]) =>
-            `${k}:${v}`).join(" / ") : "無異常";
-        setText("v-quality-sub", issues);
+        setText("sb-quality", qTotal > 0 ? `⚠️${qTotal}` : "OK");
     }
     if (system) {
         const lastJob = system.last_job;
         if (lastJob && lastJob.job_name) {
             setText("api-base-label",
-                `last job · ${lastJob.job_name} (${lastJob.status})`);
+                `last_job: ${lastJob.job_name}(${lastJob.status})`);
         } else {
             setText("api-base-label", API_BASE);
         }
@@ -407,7 +397,7 @@ async function lookupStock() {
 // =====================================================================
 async function loadPredictionHero() {
     try {
-        // v0.9.2: Hero 主指標切到合議系統 v0.8.2 final_hit_rate + directional_hit_rate
+        // v0.9.3 改版:Hero 4 欄(合議/方向感/中性比例/樣本)
         const [v08, quadrant] = await Promise.all([
             apiGet("/api/prediction/overall-v08").catch(() => null),
             apiGet("/api/prediction/quadrant").catch(() => null),
@@ -418,14 +408,15 @@ async function loadPredictionHero() {
             const all = v08.windows.all || {};
             const w30 = v08.windows["30d"] || {};
             setText("hero-final-all", fmtPct(all.final_hit_rate));
-            setText("hero-dir-all",   fmtPct(all.directional_hit_rate));
             setText("hero-final-30",  fmtPct(w30.final_hit_rate));
+            setText("hero-dir-all",   fmtPct(all.directional_hit_rate));
             setText("hero-dir-30",    fmtPct(w30.directional_hit_rate));
+            setText("hero-neu-all",   fmtPct(all.neutral_ratio));
+            setText("hero-neu-hit",   fmtPct(all.neutral_hit_rate));
 
             const sampN = all.n ?? 0;
-            const neuRatio = all.neutral_ratio != null ? (all.neutral_ratio * 100).toFixed(0) : "--";
-            setText("hero-sample-info",
-                `樣本 ${sampN} · 中性比例 ${neuRatio}% · 中性納入分母 · 僅作研究參考`);
+            setText("hero-sample-n", sampN.toLocaleString());
+            setText("hero-sample-info", `已驗證 · 30d ${w30.n ?? 0}`);
         }
 
         // 後台保留 Math + AI 老 overall(給其他區塊用)
@@ -443,30 +434,8 @@ async function loadPredictionHero() {
                 `共同盲點 ${qa.quadrant_both_miss ?? 0}/${qa.both_directional_n ?? 0}`);
         }
 
-        // breakdown(沿用 v0.7 數字 — 給後台診斷區看 Math 各信心級表現)
-        const fillCell = (idRate, idN, src, rateField, nField) => {
-            const rate = src[rateField], n = src[nField];
-            setText(idRate, rate != null ? (rate * 100).toFixed(1) + "%" : "—");
-            setText(idN, "n=" + (n ?? 0));
-        };
-        fillCell("hs-sb-rate",  "hs-sb-n",  all_v07, "strong_bullish_rate", "strong_bullish_n");
-        fillCell("hs-b-rate",   "hs-b-n",   all_v07, "bullish_rate",        "bullish_n");
-        fillCell("hs-sbe-rate", "hs-sbe-n", all_v07, "strong_bearish_rate", "strong_bearish_n");
-        fillCell("hs-be-rate",  "hs-be-n",  all_v07, "bearish_rate",        "bearish_n");
-        setText("hs-neu-n", "n=" + (all_v07.neutral_observations ?? 0));
-
-        // sparkline(舊邏輯保留)
-        const trend = null;  // v0.9.2 簡化:不抓 trend(避免 ReferenceError)
-        if (trend && trend.items?.length) {
-            const blocks = ["▁","▂","▃","▄","▅","▆","▇","█"];
-            const pts = trend.items.map(t => t.overall_rate).filter(x => x != null);
-            if (pts.length) {
-                const min = Math.min(...pts), max = Math.max(...pts);
-                const range = max - min || 0.01;
-                const spark = pts.map(p => blocks[Math.min(7, Math.floor((p - min) / range * 8))]).join("");
-                setText("hero-trend", spark);
-            }
-        }
+        // v0.9.3:5 個信心級卡 + sparkline 已從 UI 移除,不再 fillCell
+        // 保留 all_v07 變數讓 quadrant 區段不報錯
     } catch (e) {
         console.warn("hero prediction failed:", e);
     }
@@ -476,8 +445,14 @@ async function loadTodayPredictions() {
     try {
         const r = await apiGet("/api/predictions/today");
         const basis = r.basis_date, target = r.target_date;
+        // v0.9.3: title 改成 真實下次交易日期
+        if (target) {
+            setText("predictions-title", `下次交易日預測 (${fmt.date(target)})`);
+        } else {
+            setText("predictions-title", "下次交易日預測");
+        }
         const metaTxt = basis
-            ? `基準日 ${fmt.date(basis)} → 目標日 ${target ? fmt.date(target) : "—"} · ${r.count} 檔`
+            ? `基準日 ${fmt.date(basis)} · ${r.count} 檔`
             : "—";
         setText("predictions-meta", metaTxt);
         const items = r.items || [];

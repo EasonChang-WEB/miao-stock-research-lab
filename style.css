@@ -296,11 +296,9 @@ a:hover { color: var(--accent-bright); }
     grid-column: 1 / -1;
     grid-row: 1;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);   /* 跟 KPI 6 等分對齊 */
+    grid-template-columns: 1fr;   /* v0.9.3: 整列一個 hero-card */
     gap: 10px;
 }
-.hero-row > .hero-card { grid-column: 1 / 2; }   /* 第 1 格 */
-.hero-row > .hero-stats { grid-column: 2 / 7; }  /* 第 2~6 格(寬 5/6) */
 .hero-card {
     background: linear-gradient(135deg, #1a2230 0%, #15191f 100%);
     border: 1px solid var(--accent-dim);
@@ -372,6 +370,92 @@ a:hover { color: var(--accent-bright); }
     font-weight: 600;
     margin-left: 6px;
     vertical-align: middle;
+}
+
+/* v0.9.3 — Hero 整列改版(4 欄大字) */
+.hero-wide {
+    padding: 16px 24px;
+    min-height: 130px;
+    gap: 12px;
+}
+.hero-disclaimer {
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 400;
+    margin-left: 12px;
+    font-style: italic;
+}
+.hero-numbers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 8px;
+}
+.hn-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 16px;
+    border-left: 2px solid var(--border);
+}
+.hn-col:first-child {
+    padding-left: 0;
+    border-left: none;
+}
+.hn-key {
+    font-size: 11px;
+    color: var(--text-2);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.hn-val {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+.hn-val.final  { color: #38bdf8; }
+.hn-val.dir    { color: #a78bfa; }
+.hn-val.neu    { color: #fbbf24; }
+.hn-val.sample { color: var(--text-0); font-size: 28px; }
+.hn-sub {
+    font-size: 11px;
+    color: var(--text-2);
+    font-family: var(--font-mono);
+}
+
+/* v0.9.3 — ROW 4: 預測 + AI 摘要(3:1 ratio) */
+.row-predictions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 10px;
+}
+
+/* v0.9.3 — ROW 5: 訊號 + 規則(2 column) */
+.row-signals-rules {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* v0.9.3 — footer item 微調 */
+.statusbar .left,
+.statusbar .right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.statusbar .item {
+    color: var(--text-2);
+    font-size: 11px;
+}
+.statusbar .item .mono {
+    color: var(--text-1);
+    margin-left: 2px;
 }
 
 /* v0.9.2 — strong_disagreement 警示卡 */
