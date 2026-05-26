@@ -44,6 +44,87 @@
   <!-- Main ----------------------------------------------------------- -->
   <main class="main">
 
+    <!-- ROW 0: 大盤儀表板(5 區塊)v1.0-beta-2A++ -->
+    <section class="market-snapshot-row">
+      <div class="ms-card ms-taiex">
+        <div class="ms-head">
+          <span class="ms-icon">📊</span>
+          <span class="ms-title">台股盤面</span>
+        </div>
+        <div class="ms-body" id="ms-taiex-body">
+          <div class="ms-row"><span class="ms-k">加權指數</span><span class="ms-v" id="ms-taiex-close">--</span></div>
+          <div class="ms-row"><span class="ms-k">漲跌 / 漲跌幅</span><span class="ms-v" id="ms-taiex-change">--</span></div>
+          <div class="ms-row"><span class="ms-k">成交金額</span><span class="ms-v" id="ms-taiex-volume">--</span></div>
+          <div class="ms-row"><span class="ms-k">櫃買指數</span><span class="ms-v" id="ms-otc">--</span></div>
+          <div class="ms-row"><span class="ms-k">漲跌家數</span><span class="ms-v" id="ms-breadth">--</span></div>
+        </div>
+        <div class="ms-tags" id="ms-taiex-tags"></div>
+        <div class="ms-foot">資料日 <span id="ms-taiex-asof">--</span></div>
+      </div>
+
+      <div class="ms-card ms-intl">
+        <div class="ms-head">
+          <span class="ms-icon">🌐</span>
+          <span class="ms-title">國際盤勢</span>
+        </div>
+        <div class="ms-body" id="ms-intl-body">
+          <div class="ms-row"><span class="ms-k">NASDAQ</span><span class="ms-v" id="ms-intl-nasdaq">--</span></div>
+          <div class="ms-row"><span class="ms-k">費半</span><span class="ms-v" id="ms-intl-sox">--</span></div>
+          <div class="ms-row"><span class="ms-k">S&amp;P 500</span><span class="ms-v" id="ms-intl-sp500">--</span></div>
+          <div class="ms-row"><span class="ms-k">道瓊</span><span class="ms-v" id="ms-intl-dow">--</span></div>
+          <div class="ms-row"><span class="ms-k">美元指數</span><span class="ms-v" id="ms-intl-dxy">--</span></div>
+        </div>
+        <div class="ms-foot">資料日 <span id="ms-intl-asof">--</span></div>
+      </div>
+
+      <div class="ms-card ms-risk">
+        <div class="ms-head">
+          <span class="ms-icon">⚡</span>
+          <span class="ms-title">風險指標</span>
+        </div>
+        <div class="ms-body" id="ms-risk-body">
+          <div class="ms-row"><span class="ms-k">VIX 恐慌</span><span class="ms-v" id="ms-risk-vix">--</span></div>
+          <div class="ms-row"><span class="ms-k">美 10 年</span><span class="ms-v" id="ms-risk-us10y">--</span></div>
+          <div class="ms-row"><span class="ms-k">美元指數</span><span class="ms-v" id="ms-risk-dxy">--</span></div>
+          <div class="ms-row"><span class="ms-k">USD/TWD</span><span class="ms-v" id="ms-risk-twd">--</span></div>
+          <div class="ms-row"><span class="ms-k">黃金</span><span class="ms-v" id="ms-risk-gold">--</span></div>
+        </div>
+        <div class="ms-foot">資料日 <span id="ms-risk-asof">--</span></div>
+      </div>
+
+      <div class="ms-card ms-inst">
+        <div class="ms-head">
+          <span class="ms-icon">💼</span>
+          <span class="ms-title">法人籌碼</span>
+          <span class="ms-sub">(盤後資料)</span>
+        </div>
+        <div class="ms-body" id="ms-inst-body">
+          <div class="ms-row"><span class="ms-k">外資</span><span class="ms-v" id="ms-inst-foreign">--</span></div>
+          <div class="ms-row"><span class="ms-k">投信</span><span class="ms-v" id="ms-inst-trust">--</span></div>
+          <div class="ms-row"><span class="ms-k">自營商</span><span class="ms-v" id="ms-inst-dealer">--</span></div>
+          <div class="ms-row"><span class="ms-k">三大法人合計</span><span class="ms-v" id="ms-inst-total">--</span></div>
+          <div class="ms-row"><span class="ms-k">外資趨勢</span><span class="ms-v" id="ms-inst-streak">--</span></div>
+        </div>
+        <div class="ms-foot">資料日 <span id="ms-inst-asof">--</span></div>
+      </div>
+
+      <div class="ms-card ms-fut">
+        <div class="ms-head">
+          <span class="ms-icon">🎯</span>
+          <span class="ms-title">多空關鍵</span>
+        </div>
+        <div class="ms-body" id="ms-fut-body">
+          <div class="ms-row"><span class="ms-k">外資期貨淨部位</span><span class="ms-v" id="ms-fut-oi">--</span></div>
+          <div class="ms-row"><span class="ms-k">單日變化</span><span class="ms-v" id="ms-fut-d1">--</span></div>
+          <div class="ms-row"><span class="ms-k">5 日變化</span><span class="ms-v" id="ms-fut-d5">--</span></div>
+          <div class="ms-row"><span class="ms-k">買賣權 OI</span><span class="ms-v" id="ms-fut-pcoi">--</span></div>
+          <div class="ms-row"><span class="ms-k">台指期價差</span><span class="ms-v" id="ms-fut-basis">--</span></div>
+        </div>
+        <div class="ms-tags" id="ms-fut-tags"></div>
+        <div class="ms-foot">資料日 <span id="ms-fut-asof">--</span></div>
+      </div>
+    </section>
+
     <!-- ROW 1: Hero 主指標(整列,大字呈現) -->
     <section class="hero-row">
       <div class="hero-card hero-wide">

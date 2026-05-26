@@ -559,6 +559,7 @@ async function refreshAll() {
     }
     try {
         await Promise.all([
+            loadMarketSnapshot(),
             loadKPIs(), loadPredictionHero(), loadTodayPredictions(),
             loadVerifications(), loadDisagreementCard(),
             loadSignals(), loadRules(), loadReport(),
@@ -575,6 +576,162 @@ function tickClock() {
     const d = new Date();
     setText("clock", d.toLocaleTimeString("zh-TW", { hour12: false }));
 }
+
+// =====================================================================
+// v1.0-beta-2A++ — 大盤儀表板(5 區塊)
+// =====================================================================
+function fmtNum(v, dp = 2) {
+    if (v === null || v === undefined || isNaN(v)) return "--";
+    return Number(v).toLocaleString("zh-TW", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+}
+function fmtPct(v, dp = 2) {
+    if (v === null || v === undefined || isNaN(v)) return "--";
+    const sign = v > 0 ? "+" : "";
+    return `${sign}${Number(v).toFixed(dp)}%`;
+}
+function fmtSigned(v, suffix = "", dp = 1) {
+    if (v === null || v === undefined || isNaN(v)) return "--";
+    const sign = v > 0 ? "+" : "";
+    return `${sign}${Number(v).toFixed(dp)}${suffix}`;
+}
+function colorClassByValue(v) {
+    if (v === null || v === undefined || isNaN(v)) return "";
+    return v > 0 ? "ms-up" : (v < 0 ? "ms-down" : "ms-flat");
+}
+function setMS(id, html, colorBy) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = html;
+    el.classList.remove("ms-up", "ms-down", "ms-flat");
+    if (colorBy !== undefined) {
+        const c = colorClassByValue(colorBy);
+        if (c) el.classList.add(c);
+    }
+}
+
+async function loadMarketSnapshot() {
+    try {
+        const r = await apiGet("/api/market/snapshot");
+
+        // 1. 台股盤面
+        const t = r.taiex || {};
+        const tx = t.taiex || {};
+        const otc = t.otc || {};
+        setMS("ms-taiex-close", fmtNum(tx.close));
+        setMS("ms-taiex-change",
+              `${fmtNum(tx.change)} (${fmtPct(tx.change_pct)})`,
+              tx.change_pct);
+        setMS("ms-taiex-volume", tx.volume_yi ? `${fmtNum(tx.volume_yi, 0)} 億` : "--");
+        setMS("ms-otc",
+              otc.close != null ? `${fmtNum(otc.close)} (${fmtSigned(otc.change, "", 2)})` : "--",
+              otc.change_pct);
+        const adv = t.advancers, dec = t.decliners;
+        setMS("ms-breadth",
+              (adv != null && dec != null) ? `${adv} / ${dec}` : "--");
+        setMS("ms-taiex-asof", t.as_of || "--");
+
+        const taiexTags = document.getElementById("ms-taiex-tags");
+        if (taiexTags) {
+            taiexTags.innerHTML = "";
+            if (t.regime_label) {
+                const chip = document.createElement("span");
+                chip.className = "ms-chip " + (t.regime_label.includes("多") ? "chip-bull" : (t.regime_label.includes("空") ? "chip-bear" : "chip-neu"));
+                chip.textContent = t.regime_label;
+                taiexTags.appendChild(chip);
+            }
+            if (t.foreign_futures_bias) {
+                const chip = document.createElement("span");
+                chip.className = "ms-chip " + (t.foreign_futures_bias === "long" ? "chip-bull" : (t.foreign_futures_bias === "short" ? "chip-bear" : "chip-neu"));
+                chip.textContent = t.foreign_futures_bias === "long" ? "外資偏多" :
+                                    t.foreign_futures_bias === "short" ? "外資偏空" : "中性";
+                taiexTags.appendChild(chip);
+            }
+        }
+
+        // 2. 國際盤勢
+        const i = r.international || {};
+        ["nasdaq", "sox", "sp500", "dow", "dxy"].forEach(k => {
+            const v = i[k] || {};
+            setMS(`ms-intl-${k}`,
+                  v.close != null ? `${fmtNum(v.close)} <span class="ms-pct">${fmtPct(v.change_pct)}</span>` : "--",
+                  v.change_pct);
+        });
+        setMS("ms-intl-asof", i.as_of || "--");
+
+        // 3. 風險指標
+        const rk = r.risk || {};
+        ["vix", "us10y", "dxy", "twd", "gold"].forEach(k => {
+            const v = rk[k] || {};
+            setMS(`ms-risk-${k}`,
+                  v.close != null ? `${fmtNum(v.close)} <span class="ms-pct">${fmtPct(v.change_pct)}</span>` : "--",
+                  v.change_pct);
+        });
+        setMS("ms-risk-asof", rk.as_of || "--");
+
+        // 4. 法人籌碼
+        const ist = r.institutional || {};
+        setMS("ms-inst-foreign",
+              ist.foreign_yi != null ? `${fmtSigned(ist.foreign_yi, " 億", 1)}` : "--",
+              ist.foreign_yi);
+        setMS("ms-inst-trust",
+              ist.trust_yi != null ? `${fmtSigned(ist.trust_yi, " 億", 1)}` : "--",
+              ist.trust_yi);
+        setMS("ms-inst-dealer",
+              ist.dealer_yi != null ? `${fmtSigned(ist.dealer_yi, " 億", 1)}` : "--",
+              ist.dealer_yi);
+        setMS("ms-inst-total",
+              ist.total_yi != null ? `${fmtSigned(ist.total_yi, " 億", 1)}` : "--",
+              ist.total_yi);
+        if (ist.streak_n && ist.streak_dir) {
+            const word = ist.streak_dir === "buy" ? "買" : "賣";
+            setMS("ms-inst-streak", `連 ${ist.streak_n} 日 ${word}`,
+                  ist.streak_dir === "buy" ? 1 : -1);
+        } else {
+            setMS("ms-inst-streak", "--");
+        }
+        setMS("ms-inst-asof", ist.as_of || "--");
+
+        // 5. 多空關鍵
+        const f = r.futures || {};
+        setMS("ms-fut-oi",
+              f.tx_foreign_net_oi != null ?
+                (f.tx_foreign_net_oi > 0 ? `淨多 ${fmtNum(Math.abs(f.tx_foreign_net_oi), 0)} 口` :
+                                            `淨空 ${fmtNum(Math.abs(f.tx_foreign_net_oi), 0)} 口`) : "--",
+              f.tx_foreign_net_oi);
+        setMS("ms-fut-d1",
+              f.change_1d != null ?
+                (f.change_1d > 0 ? `多單增加 ${fmtNum(f.change_1d, 0)} 口` : `空單增加 ${fmtNum(Math.abs(f.change_1d), 0)} 口`) : "--",
+              f.change_1d);
+        setMS("ms-fut-d5",
+              f.change_5d != null ?
+                (f.change_5d > 0 ? `多單增加 ${fmtNum(f.change_5d, 0)} 口` : `空單增加 ${fmtNum(Math.abs(f.change_5d), 0)} 口`) : "--",
+              f.change_5d);
+        setMS("ms-fut-pcoi",
+              f.pc_ratio_oi != null ?
+                `${fmtNum(f.pc_ratio_oi, 2)} ${f.pc_ratio_oi > 1.2 ? "避險偏高" : f.pc_ratio_oi < 0.9 ? "看多氣氛" : ""}` : "--",
+              f.pc_ratio_oi != null ? (f.pc_ratio_oi > 1.2 ? -1 : f.pc_ratio_oi < 0.9 ? 1 : 0) : null);
+        setMS("ms-fut-basis",
+              f.basis != null ?
+                (f.basis > 0 ? `正價差 ${fmtNum(f.basis, 0)} 點` : `逆價差 ${fmtNum(Math.abs(f.basis), 0)} 點`) : "--",
+              f.basis);
+        setMS("ms-fut-asof", f.as_of || "--");
+
+        const futTags = document.getElementById("ms-fut-tags");
+        if (futTags && f.status_tags && f.status_tags.length) {
+            futTags.innerHTML = "";
+            f.status_tags.forEach(s => {
+                const chip = document.createElement("span");
+                chip.className = "ms-chip " + (s.includes("空") || s.includes("避險") ? "chip-bear" :
+                                              s.includes("多") || s.includes("看多") ? "chip-bull" : "chip-neu");
+                chip.textContent = s;
+                futTags.appendChild(chip);
+            });
+        }
+    } catch (e) {
+        console.warn("market snapshot failed", e);
+    }
+}
+
 
 // =====================================================================
 // v0.9.2 — strong_disagreement 警示卡(文案紀律版)
