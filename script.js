@@ -404,6 +404,11 @@ async function loadPredictionHero() {
         ]);
         const fmtPct = (v) => v != null ? (v * 100).toFixed(1) + "%" : "--%";
 
+        // 同時抓 v0.7 overall(裡面有總樣本數,v0.8.2 endpoint 沒回 n)
+        const overall = await apiGet("/api/prediction/overall").catch(() => null);
+        const all_v07 = (overall && overall.windows && overall.windows.all) || {};
+        const w30_v07 = (overall && overall.windows && overall.windows["30d"]) || {};
+
         if (v08 && v08.windows) {
             const all = v08.windows.all || {};
             const w30 = v08.windows["30d"] || {};
@@ -414,14 +419,14 @@ async function loadPredictionHero() {
             setText("hero-neu-all",   fmtPct(all.neutral_ratio));
             setText("hero-neu-hit",   fmtPct(all.neutral_hit_rate));
 
-            const sampN = all.n ?? 0;
+            // 樣本從 v0.7 算(total_predictions + neutral_observations)
+            const sampN = (all_v07.total_predictions ?? 0) +
+                          (all_v07.neutral_observations ?? 0);
+            const samp30 = (w30_v07.total_predictions ?? 0) +
+                           (w30_v07.neutral_observations ?? 0);
             setText("hero-sample-n", sampN.toLocaleString());
-            setText("hero-sample-info", `已驗證 · 30d ${w30.n ?? 0}`);
+            setText("hero-sample-info", `已驗證 · 30d ${samp30}`);
         }
-
-        // 後台保留 Math + AI 老 overall(給其他區塊用)
-        const overall = await apiGet("/api/prediction/overall").catch(() => null);
-        const all_v07 = (overall && overall.windows && overall.windows.all) || {};
 
         // v0.6 Math × AI 四象限
         if (quadrant && quadrant.windows) {

@@ -123,6 +123,7 @@ a:hover { color: var(--accent-bright); }
     align-items: center;
     gap: 18px;
     flex-shrink: 0;
+    max-width: 45%;
 }
 .topbar-center {
     position: absolute;
@@ -249,17 +250,17 @@ a:hover { color: var(--accent-bright); }
 .main {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    /* v0.6: 4 rows (hero / quadrant / kpi / panels) */
-    grid-template-rows: auto auto auto minmax(0, 1fr);
+    /* v0.9.3: 改 auto rows + 可滾動,容納更多 section */
+    grid-auto-rows: auto;
     gap: 10px;
     padding: 10px;
-    overflow: hidden;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 /* v0.6 — Math × AI 四象限橫條 */
 .quadrant-row {
     grid-column: 1 / -1;
-    grid-row: 2;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
@@ -294,7 +295,6 @@ a:hover { color: var(--accent-bright); }
 /* v0.5.3 — Hero row 對齊 KPI 6 等分 grid,讓上下兩排寬度一致 */
 .hero-row {
     grid-column: 1 / -1;
-    grid-row: 1;
     display: grid;
     grid-template-columns: 1fr;   /* v0.9.3: 整列一個 hero-card */
     gap: 10px;
@@ -569,10 +569,8 @@ a:hover { color: var(--accent-bright); }
 .ai-report-body .findings { margin-bottom: 4px; }
 .ai-report-body .empty { color: var(--text-3); font-size: 11px; }
 
-/* Content panels (v0.6: 移到 row 4) */
+/* Content panels (v0.9.3: 改用 row-predictions / row-signals-rules 包,不再寫 grid-row) */
 .panel-predictions {
-    grid-column: 1 / 6;
-    grid-row: 4;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -582,8 +580,6 @@ a:hover { color: var(--accent-bright); }
     overflow: hidden;
     box-shadow: var(--shadow-sm);
 }
-.panel-signals     { grid-column: 6 / 9;  grid-row: 4; }
-.panel-rules       { grid-column: 9 / 13; grid-row: 4; }
 
 /* 預測 panel 內的 sub-card(上下分:下次預測 / 驗證結果) */
 .sub-card {
