@@ -450,9 +450,20 @@ async function loadTodayPredictions() {
     try {
         const r = await apiGet("/api/predictions/today");
         const basis = r.basis_date, target = r.target_date;
-        // v0.9.3: title 改成 真實下次交易日期
-        if (target) {
-            setText("predictions-title", `下次交易日預測 (${fmt.date(target)})`);
+        // v0.9.4: title 帶下次交易日期;若 target 為 null,用 basis+1 工作日推算
+        let nextDate = target;
+        if (!nextDate && basis) {
+            const d = new Date(basis);
+            d.setDate(d.getDate() + 1);
+            // 跳過週六/日
+            while (d.getDay() === 0 || d.getDay() === 6) {
+                d.setDate(d.getDate() + 1);
+            }
+            nextDate = d.toISOString().slice(0, 10);
+        }
+        if (nextDate) {
+            const tag = target ? "" : " 預估";
+            setText("predictions-title", `下次交易日預測 (${fmt.date(nextDate)})${tag}`);
         } else {
             setText("predictions-title", "下次交易日預測");
         }

@@ -114,40 +114,29 @@
       </div>
     </section>
 
-    <!-- ROW 4: 預測 + 驗證 + AI 摘要(3 column) -->
+    <!-- ROW 4: 預測 + 驗證(左右並排) -->
     <section class="row-predictions">
-      <div class="card panel-predictions">
-        <div class="sub-card">
-          <div class="sub-head">
-            <span class="title" id="predictions-title">下次交易日預測</span>
-            <span class="meta" id="predictions-meta">--</span>
-          </div>
-          <div class="sub-body" id="predictions-body">
-            <div class="empty"><span class="spinner"></span>讀取中...</div>
-          </div>
+      <div class="card sub-card-standalone">
+        <div class="sub-head">
+          <span class="title" id="predictions-title">下次交易日預測</span>
+          <span class="meta" id="predictions-meta">--</span>
         </div>
-        <div class="sub-card">
-          <div class="sub-head">
-            <span class="title">最近預測驗證結果</span>
-            <span class="meta" id="verifications-meta">--</span>
-          </div>
-          <div class="sub-body" id="verifications-body">
-            <div class="empty"><span class="spinner"></span>讀取中...</div>
-          </div>
+        <div class="sub-body" id="predictions-body">
+          <div class="empty"><span class="spinner"></span>讀取中...</div>
         </div>
       </div>
-      <div class="card panel-ai-report">
-        <div class="card-head">
-          <span class="title">AI 研究摘要</span>
-          <span class="meta" id="report-meta">--</span>
+      <div class="card sub-card-standalone">
+        <div class="sub-head">
+          <span class="title">最近預測驗證結果</span>
+          <span class="meta" id="verifications-meta">--</span>
         </div>
-        <div class="card-body" id="report-body">
-          <div class="empty">讀取中...</div>
+        <div class="sub-body" id="verifications-body">
+          <div class="empty"><span class="spinner"></span>讀取中...</div>
         </div>
       </div>
     </section>
 
-    <!-- ROW 5: 訊號 + 規則(2 column) -->
+    <!-- ROW 5: 訊號 + 規則 + AI 摘要(3 column,AI 摘要縮小) -->
     <section class="row-signals-rules">
       <div class="card panel-signals">
         <div class="card-head">
@@ -165,6 +154,15 @@
         </div>
         <div class="card-body flush" id="rules-body">
           <div class="empty"><span class="spinner"></span>讀取中...</div>
+        </div>
+      </div>
+      <div class="card panel-ai-report-small">
+        <div class="card-head">
+          <span class="title">AI 研究摘要</span>
+          <span class="meta" id="report-meta">--</span>
+        </div>
+        <div class="card-body" id="report-body">
+          <div class="empty">讀取中...</div>
         </div>
       </div>
     </section>

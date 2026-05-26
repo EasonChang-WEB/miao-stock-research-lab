@@ -426,20 +426,51 @@ a:hover { color: var(--accent-bright); }
     font-family: var(--font-mono);
 }
 
-/* v0.9.3 — ROW 4: 預測 + AI 摘要(3:1 ratio) */
+/* v0.9.4 — ROW 4: 預測 + 驗證(左右並排) */
 .row-predictions {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 3fr 1fr;
-    gap: 10px;
-}
-
-/* v0.9.3 — ROW 5: 訊號 + 規則(2 column) */
-.row-signals-rules {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+}
+.sub-card-standalone {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+/* v0.9.4 — ROW 5: 訊號 + 規則 + AI 摘要(3 column,AI 摘要縮小) */
+.row-signals-rules {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 5fr 4fr 3fr;  /* 訊號最大,AI 摘要最小 */
+    gap: 10px;
+}
+
+/* AI 摘要縮小版(取代原 panel-ai-report) */
+.panel-ai-report-small {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    max-height: 320px;
+}
+.panel-ai-report-small .card-body {
+    overflow-y: auto;
+    font-size: 11.5px;
+    line-height: 1.5;
+    padding: 8px 12px;
+}
+.panel-ai-report-small .findings {
+    color: var(--text-1);
+    margin-bottom: 6px;
 }
 
 /* v0.9.3 — footer item 微調 */
