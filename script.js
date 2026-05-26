@@ -407,27 +407,30 @@ async function lookupStock() {
 // =====================================================================
 async function loadPredictionHero() {
     try {
-        const [overall, quadrant] = await Promise.all([
-            apiGet("/api/prediction/overall").catch(() => null),
+        // v0.9.2: Hero 主指標切到合議系統 v0.8.2 final_hit_rate + directional_hit_rate
+        const [v08, quadrant] = await Promise.all([
+            apiGet("/api/prediction/overall-v08").catch(() => null),
             apiGet("/api/prediction/quadrant").catch(() => null),
         ]);
-        if (!overall || !overall.windows) return;
-        const w = overall.windows;
-        const all = w.all || {};
-        const w30 = w["30d"] || {};
-
-        // 4 格:累計/30天 × MATH/AI
         const fmtPct = (v) => v != null ? (v * 100).toFixed(1) + "%" : "--%";
-        setText("hero-math-all", fmtPct(all.overall_rate));
-        setText("hero-ai-all",   fmtPct(all.ai_overall_rate));
-        setText("hero-math-30",  fmtPct(w30.overall_rate));
-        setText("hero-ai-30",    fmtPct(w30.ai_overall_rate));
 
-        // v0.6 加 樣本量 + 統計口徑說明 在 hero-sub
-        const sampN = all.total_predictions ?? 0;
-        const aiVerified = all.ai_total_predictions ?? 0;
-        setText("hero-sample-info",
-            `樣本 ${sampN} 已驗證 · AI 跑完率 ${sampN ? Math.round(aiVerified/sampN*100) : 0}% · 不含中性`);
+        if (v08 && v08.windows) {
+            const all = v08.windows.all || {};
+            const w30 = v08.windows["30d"] || {};
+            setText("hero-final-all", fmtPct(all.final_hit_rate));
+            setText("hero-dir-all",   fmtPct(all.directional_hit_rate));
+            setText("hero-final-30",  fmtPct(w30.final_hit_rate));
+            setText("hero-dir-30",    fmtPct(w30.directional_hit_rate));
+
+            const sampN = all.n ?? 0;
+            const neuRatio = all.neutral_ratio != null ? (all.neutral_ratio * 100).toFixed(0) : "--";
+            setText("hero-sample-info",
+                `樣本 ${sampN} · 中性比例 ${neuRatio}% · 中性納入分母 · 僅作研究參考`);
+        }
+
+        // 後台保留 Math + AI 老 overall(給其他區塊用)
+        const overall = await apiGet("/api/prediction/overall").catch(() => null);
+        const all_v07 = (overall && overall.windows && overall.windows.all) || {};
 
         // v0.6 Math × AI 四象限
         if (quadrant && quadrant.windows) {
@@ -440,19 +443,20 @@ async function loadPredictionHero() {
                 `共同盲點 ${qa.quadrant_both_miss ?? 0}/${qa.both_directional_n ?? 0}`);
         }
 
-        // breakdown
+        // breakdown(沿用 v0.7 數字 — 給後台診斷區看 Math 各信心級表現)
         const fillCell = (idRate, idN, src, rateField, nField) => {
             const rate = src[rateField], n = src[nField];
             setText(idRate, rate != null ? (rate * 100).toFixed(1) + "%" : "—");
             setText(idN, "n=" + (n ?? 0));
         };
-        fillCell("hs-sb-rate",  "hs-sb-n",  all, "strong_bullish_rate", "strong_bullish_n");
-        fillCell("hs-b-rate",   "hs-b-n",   all, "bullish_rate",        "bullish_n");
-        fillCell("hs-sbe-rate", "hs-sbe-n", all, "strong_bearish_rate", "strong_bearish_n");
-        fillCell("hs-be-rate",  "hs-be-n",  all, "bearish_rate",        "bearish_n");
-        setText("hs-neu-n", "n=" + (all.neutral_observations ?? 0));
+        fillCell("hs-sb-rate",  "hs-sb-n",  all_v07, "strong_bullish_rate", "strong_bullish_n");
+        fillCell("hs-b-rate",   "hs-b-n",   all_v07, "bullish_rate",        "bullish_n");
+        fillCell("hs-sbe-rate", "hs-sbe-n", all_v07, "strong_bearish_rate", "strong_bearish_n");
+        fillCell("hs-be-rate",  "hs-be-n",  all_v07, "bearish_rate",        "bearish_n");
+        setText("hs-neu-n", "n=" + (all_v07.neutral_observations ?? 0));
 
-        // sparkline
+        // sparkline(舊邏輯保留)
+        const trend = null;  // v0.9.2 簡化:不抓 trend(避免 ReferenceError)
         if (trend && trend.items?.length) {
             const blocks = ["▁","▂","▃","▄","▅","▆","▇","█"];
             const pts = trend.items.map(t => t.overall_rate).filter(x => x != null);
@@ -565,7 +569,7 @@ async function refreshAll() {
     try {
         await Promise.all([
             loadKPIs(), loadPredictionHero(), loadTodayPredictions(),
-            loadVerifications(),
+            loadVerifications(), loadDisagreementCard(),
             loadSignals(), loadRules(), loadReport(),
         ]);
         lastSuccess = new Date();
@@ -579,6 +583,57 @@ async function refreshAll() {
 function tickClock() {
     const d = new Date();
     setText("clock", d.toLocaleTimeString("zh-TW", { hour12: false }));
+}
+
+// =====================================================================
+// v0.9.2 — strong_disagreement 警示卡(文案紀律版)
+// =====================================================================
+async function loadDisagreementCard() {
+    try {
+        const r = await apiGet("/api/prediction/strong-disagreement?days=7");
+        const items = r.items || [];
+        const stats = r.stats || {};
+        setText("disagree-meta",
+            `近 7 天 ${r.count || 0} 筆 · 30 天中性收斂率 ${
+                stats.neutral_converge_rate != null
+                    ? (stats.neutral_converge_rate * 100).toFixed(1) + "%"
+                    : "--"
+            }`);
+        if (!items.length) {
+            setHTML("disagree-body",
+                `<div class="empty">近 7 天無強烈分歧記錄</div>`);
+            return;
+        }
+        const rows = items.slice(0, 10).map(v => {
+            const mathDir = v.math_direction === "bullish" ? "強偏多 ⬆️" :
+                            v.math_direction === "bearish" ? "強偏空 ⬇️" : "中性";
+            const aiDir = v.ai_direction === "bullish" ? "強偏多 ⬆️" :
+                          v.ai_direction === "bearish" ? "強偏空 ⬇️" : "中性";
+            const actualTag = v.actual_direction_v08
+                ? `<span class="tag ${v.actual_direction_v08 === 'up' ? 'pos' :
+                                       v.actual_direction_v08 === 'down' ? 'neg' : 'dim'}">${
+                    v.actual_direction_v08 === 'up' ? '↑' :
+                    v.actual_direction_v08 === 'down' ? '↓' : '→'
+                } ${v.actual_return_1d != null ? (v.actual_return_1d * 100).toFixed(1) + '%' : '?'}</span>`
+                : `<span class="tag muted">待驗證</span>`;
+            return `<tr>
+                <td class="mono dim">${fmt.date(v.prediction_date)}</td>
+                <td class="mono"><strong>${escapeHtml(v.symbol)}</strong></td>
+                <td class="name">${escapeHtml(v.symbol_name || '')}</td>
+                <td>${mathDir}</td>
+                <td>${aiDir}</td>
+                <td>${actualTag}</td>
+            </tr>`;
+        }).join("");
+        setHTML("disagree-body", `<table class="data">
+            <thead><tr>
+                <th>日期</th><th>代號</th><th>名稱</th>
+                <th>Math</th><th>AI</th><th>實際</th>
+            </tr></thead><tbody>${rows}</tbody></table>`);
+    } catch (e) {
+        setHTML("disagree-body",
+            `<div class="empty">讀取失敗:${escapeHtml(e.message)}</div>`);
+    }
 }
 
 // =====================================================================
