@@ -46,10 +46,11 @@
 
     <!-- ROW 0: 大盤儀表板(5 區塊)v1.0-beta-2A++ -->
     <section class="market-snapshot-row">
-      <div class="ms-card ms-taiex">
+      <div class="ms-card ms-taiex" title="台股盤面 — 盤後 17:00 後更新當日完整資料(收盤、成交量、櫃買)">
         <div class="ms-head">
           <span class="ms-icon">📊</span>
           <span class="ms-title">台股盤面</span>
+          <span class="ms-sub">(盤後 17:00)</span>
         </div>
         <div class="ms-body" id="ms-taiex-body">
           <div class="ms-row"><span class="ms-k">加權指數</span><span class="ms-v" id="ms-taiex-close">--</span></div>
@@ -62,10 +63,11 @@
         <div class="ms-foot">資料日 <span id="ms-taiex-asof">--</span></div>
       </div>
 
-      <div class="ms-card ms-intl">
+      <div class="ms-card ms-intl" title="國際盤勢 — 美股:09:30~16:00 ET(台灣 21:30~04:00)。美國假期休市時最新仍停留前一交易日。亞股:當日盤後">
         <div class="ms-head">
           <span class="ms-icon">🌐</span>
           <span class="ms-title">國際盤勢</span>
+          <span class="ms-sub">(昨夜美股)</span>
         </div>
         <div class="ms-body" id="ms-intl-body">
           <div class="ms-row"><span class="ms-k">NASDAQ</span><span class="ms-v" id="ms-intl-nasdaq">--</span></div>
@@ -74,13 +76,14 @@
           <div class="ms-row"><span class="ms-k">道瓊</span><span class="ms-v" id="ms-intl-dow">--</span></div>
           <div class="ms-row"><span class="ms-k">美元指數</span><span class="ms-v" id="ms-intl-dxy">--</span></div>
         </div>
-        <div class="ms-foot">資料日 <span id="ms-intl-asof">--</span></div>
+        <div class="ms-foot">美股 <span id="ms-intl-us-asof">--</span></div>
       </div>
 
-      <div class="ms-card ms-risk">
+      <div class="ms-card ms-risk" title="風險指標 — VIX/美10年跟美股同步;DXY/USD/TWD/黃金 24h 外匯市場">
         <div class="ms-head">
           <span class="ms-icon">⚡</span>
           <span class="ms-title">風險指標</span>
+          <span class="ms-sub">(美股+24h外匯)</span>
         </div>
         <div class="ms-body" id="ms-risk-body">
           <div class="ms-row"><span class="ms-k">VIX 恐慌</span><span class="ms-v" id="ms-risk-vix">--</span></div>
@@ -89,14 +92,14 @@
           <div class="ms-row"><span class="ms-k">USD/TWD</span><span class="ms-v" id="ms-risk-twd">--</span></div>
           <div class="ms-row"><span class="ms-k">黃金</span><span class="ms-v" id="ms-risk-gold">--</span></div>
         </div>
-        <div class="ms-foot">資料日 <span id="ms-risk-asof">--</span></div>
+        <div class="ms-foot">美股 <span id="ms-risk-us-asof">--</span> · 外匯 <span id="ms-risk-forex-asof">--</span></div>
       </div>
 
-      <div class="ms-card ms-inst">
+      <div class="ms-card ms-inst" title="法人籌碼 — TWSE 公告,盤後 17:00 後當日完整。stock_pool 30 檔合計(非全市場)">
         <div class="ms-head">
           <span class="ms-icon">💼</span>
           <span class="ms-title">法人籌碼</span>
-          <span class="ms-sub">(盤後資料)</span>
+          <span class="ms-sub">(盤後 17:00)</span>
         </div>
         <div class="ms-body" id="ms-inst-body">
           <div class="ms-row"><span class="ms-k">外資</span><span class="ms-v" id="ms-inst-foreign">--</span></div>
@@ -108,10 +111,11 @@
         <div class="ms-foot">資料日 <span id="ms-inst-asof">--</span></div>
       </div>
 
-      <div class="ms-card ms-fut">
+      <div class="ms-card ms-fut" title="多空關鍵 — TAIFEX / FinMind 期貨資料,盤後 17:00 後更新當日完整;basis = 期貨日盤收盤 - 加權指數">
         <div class="ms-head">
           <span class="ms-icon">🎯</span>
           <span class="ms-title">多空關鍵</span>
+          <span class="ms-sub">(盤後 17:00)</span>
         </div>
         <div class="ms-body" id="ms-fut-body">
           <div class="ms-row"><span class="ms-k">外資期貨淨部位</span><span class="ms-v" id="ms-fut-oi">--</span></div>

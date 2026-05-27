@@ -656,7 +656,8 @@ async function loadMarketSnapshot() {
                   v.close != null ? `${fmtNum(v.close)} <span class="ms-pct">${fmtPct(v.change_pct)}</span>` : "--",
                   v.change_pct);
         });
-        setMS("ms-intl-asof", i.as_of || "--");
+        // v1.0-gamma-1 D: 分組日期
+        setMS("ms-intl-us-asof", i.us_as_of || i.as_of || "--");
 
         // 3. 風險指標
         const rk = r.risk || {};
@@ -666,7 +667,8 @@ async function loadMarketSnapshot() {
                   v.close != null ? `${fmtNum(v.close)} <span class="ms-pct">${fmtPct(v.change_pct)}</span>` : "--",
                   v.change_pct);
         });
-        setMS("ms-risk-asof", rk.as_of || "--");
+        setMS("ms-risk-us-asof",    rk.us_as_of    || rk.as_of || "--");
+        setMS("ms-risk-forex-asof", rk.forex_as_of || rk.as_of || "--");
 
         // 4. 法人籌碼
         const ist = r.institutional || {};
