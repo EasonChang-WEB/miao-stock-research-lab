@@ -986,6 +986,19 @@ table.data .dim { color: var(--text-3); }
 .btn.full { width: 100%; justify-content: flex-start; }
 .btn.small { padding: 4px 8px; font-size: 11px; }
 
+/* v1.0-gamma-2: 紫色「分析入口」按鈕(歷史查詢、未來個股 modal 等) */
+.btn.hist {
+    background: rgba(167,139,250,.12);
+    border-color: rgba(167,139,250,.4);
+    color: #a78bfa;
+    font-weight: 500;
+}
+.btn.hist:hover {
+    background: rgba(167,139,250,.2);
+    border-color: rgba(167,139,250,.65);
+    color: #c4b5fd;
+}
+
 input[type="text"], input[type="password"], input[type="number"], select, textarea {
     background: var(--bg-0);
     border: 1px solid var(--border-bright);
