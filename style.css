@@ -387,6 +387,29 @@ a:hover { color: var(--accent-bright); }
     .market-snapshot-row { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* v1.0-gamma-2: Topbar 響應式 — 筆電中等螢幕避免按鈕擠在一起 */
+@media (max-width: 1400px) {
+    .brand .sub { display: none; }                       /* 隱藏 "Research Monitor v0.9" 副標 */
+    .topbar-lookup input { width: 140px; }                /* 搜尋框縮短 */
+    .topbar-left { max-width: 52%; gap: 12px; }
+    .topbar-right { gap: 12px; }
+}
+@media (max-width: 1200px) {
+    .brand .sep { display: none; }                       /* 隱藏分隔符 */
+    .brand .name { font-size: 13px; }
+    .topbar-lookup input { width: 110px; font-size: 11.5px; }
+    .topbar { padding: 0 12px; gap: 8px; }
+    .topbar-right { gap: 10px; font-size: 11px; }
+    .topbar-right .clock { font-size: 11px; }
+    /* nav-btn 縮 padding */
+    .nav-btn { padding: 6px 14px; font-size: 12px; }
+}
+@media (max-width: 1000px) {
+    .brand .name { display: none; }                      /* 只留 🐾 logo */
+    #api-label, #db-label { display: none; }             /* 隱藏 API/DB 文字,只留圓點 */
+    .topbar-lookup input { width: 90px; }
+}
+
 /* v0.5.3 — Hero row 對齊 KPI 6 等分 grid,讓上下兩排寬度一致 */
 .hero-row {
     grid-column: 1 / -1;
