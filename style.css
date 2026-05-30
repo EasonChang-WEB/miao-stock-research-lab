@@ -1009,6 +1009,136 @@ table.data .dim { color: var(--text-3); }
 .btn.full { width: 100%; justify-content: flex-start; }
 .btn.small { padding: 4px 8px; font-size: 11px; }
 
+/* v1.0-gamma-2: 個股 modal */
+.stock-modal-box {
+    width: 90%; max-width: 900px;
+    max-height: 88vh; overflow-y: auto;
+}
+.stock-link {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color .12s;
+}
+.stock-link:hover { color: var(--accent-bright); text-decoration: underline; }
+.stock-section {
+    margin-top: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.stock-section:last-child { border-bottom: none; }
+.stock-section .section-title {
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.stock-rates {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+.rate-cell {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.rate-label {
+    font-size: 10.5px;
+    color: var(--text-3);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+.rate-val {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-0);
+    font-weight: 600;
+}
+.rate-sub {
+    font-size: 10px;
+    color: var(--text-3);
+    font-weight: 400;
+}
+@media (max-width: 700px) {
+    .stock-rates { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* v1.0-gamma-2: 訊號成熟度小卡(監控頁 + 控制台共用) */
+.maturity-row {
+    grid-column: 1 / -1;
+    margin-top: -4px;
+}
+.maturity-card {
+    background: linear-gradient(135deg, #1a2230 0%, #15191f 100%);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.maturity-card .m-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.maturity-card .m-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-1);
+    letter-spacing: .04em;
+}
+.maturity-card .m-stage {
+    font-size: 12px;
+    color: var(--text-2);
+    font-family: var(--font-mono);
+}
+.m-steps {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.m-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 11.5px;
+    color: var(--text-2);
+    flex: 1 1 auto;
+    min-width: 140px;
+}
+.m-step .m-dot {
+    color: #6b7280;            /* grey 預設 */
+    font-size: 14px;
+    line-height: 1;
+}
+.m-step.active .m-dot { color: #4ade80; }    /* 綠色 = 已完成 */
+.m-step.pending .m-dot { color: #6b7280; }   /* 灰色 = 待 */
+.m-step .m-label {
+    font-family: var(--font-mono);
+    color: var(--text-1);
+    font-weight: 500;
+}
+.m-step .m-desc {
+    color: var(--text-3);
+    font-size: 10.5px;
+    margin-left: auto;
+}
+@media (max-width: 1000px) {
+    .m-step { min-width: 100px; }
+    .m-step .m-desc { display: none; }
+}
+
 /* v1.0-gamma-2: 紫色「分析入口」按鈕(歷史查詢、未來個股 modal 等) */
 .btn.hist {
     background: rgba(167,139,250,.12);

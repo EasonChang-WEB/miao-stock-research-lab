@@ -487,8 +487,8 @@ async function loadTodayPredictions() {
                 ? `<span title="${escapeHtml(p.ai_narrative||'(無 AI 說明)')}">${confidenceBadge(p.ai_confidence_level, p.ai_bullish_prob)}</span>`
                 : `<span class="tag muted">⌛ 待生成</span>`;
             return `<tr>
-                <td class="mono"><strong>${escapeHtml(p.symbol)}</strong></td>
-                <td class="name">${escapeHtml(p.symbol_name || "")}</td>
+                <td class="mono"><strong><a href="#" class="stock-link" data-symbol="${escapeHtml(p.symbol)}">${escapeHtml(p.symbol)}</a></strong></td>
+                <td class="name"><a href="#" class="stock-link" data-symbol="${escapeHtml(p.symbol)}">${escapeHtml(p.symbol_name || "")}</a></td>
                 <td>${confidenceBadge(p.confidence_level, p.bullish_prob)}</td>
                 <td>${aiCell}</td>
                 <td class="dim" title="${escapeHtml((p.main_signals||[]).map(s=>s.rule_id).join(', '))}">${sigSnip}</td>
@@ -563,6 +563,7 @@ async function refreshAll() {
             loadKPIs(), loadPredictionHero(), loadTodayPredictions(),
             loadVerifications(), loadDisagreementCard(),
             loadSignals(), loadRules(), loadReport(),
+            loadSignalMaturity(),    // v1.0-gamma-2
         ]);
         lastSuccess = new Date();
         setText("last-update", lastSuccess.toLocaleTimeString());
@@ -606,6 +607,166 @@ function setMS(id, html, colorBy) {
     if (colorBy !== undefined) {
         const c = colorClassByValue(colorBy);
         if (c) el.classList.add(c);
+    }
+}
+
+// v1.0-gamma-2: 個股 modal — 點代號 / 名稱 → 開 modal 顯示 K 線 + 訊號 + 預測 + 命中率
+async function openStockModal(symbol) {
+    const modal = document.getElementById("stock-modal");
+    const body = document.getElementById("stock-modal-body");
+    const title = document.getElementById("stock-modal-title");
+    if (!modal || !body) return;
+    title.textContent = `${symbol} 個股分析`;
+    body.innerHTML = `<div class="empty"><span class="spinner"></span>讀取中...</div>`;
+    modal.style.display = "flex";
+    try {
+        const r = await apiGet(`/api/stock/${encodeURIComponent(symbol)}/profile?days=60`);
+        renderStockModal(body, r);
+        title.textContent = `${r.symbol} ${r.name} · 60 日分析`;
+    } catch (e) {
+        body.innerHTML = `<div class="empty">讀取失敗:${escapeHtml(e.message)}</div>`;
+    }
+}
+
+function renderStockModal(container, r) {
+    const ohlc = r.ohlc || [];
+    const signals = r.signals || [];
+    const preds = r.predictions || [];
+    const hr = r.hit_rate || {};
+    const strong = r.strongest_signals || [];
+
+    // 1. SVG 簡易 K 線(close 折線 + 訊號標記)
+    let chartHtml = '<div class="empty">無 OHLC 資料</div>';
+    if (ohlc.length > 0) {
+        const W = 800, H = 200, pad = 30;
+        const closes = ohlc.map(x => +x.close);
+        const lo = Math.min(...closes), hi = Math.max(...closes);
+        const span = (hi - lo) || 1;
+        const xs = (i) => pad + (W - 2 * pad) * (i / (ohlc.length - 1 || 1));
+        const ys = (v) => H - pad - (H - 2 * pad) * ((v - lo) / span);
+        const pts = ohlc.map((p, i) => `${xs(i)},${ys(+p.close)}`).join(" ");
+        // 訊號標記
+        const sigMarks = signals.map(s => {
+            const idx = ohlc.findIndex(o => o.date === s.date);
+            if (idx < 0) return "";
+            const x = xs(idx), y = ys(+ohlc[idx].close);
+            const color = s.direction === "bullish" ? "#ef4444" : (s.direction === "bearish" ? "#22c55e" : "#9ca3af");
+            const symbol = s.direction === "bullish" ? "▲" : (s.direction === "bearish" ? "▼" : "·");
+            return `<text x="${x}" y="${y - 6}" fill="${color}" font-size="10" text-anchor="middle">${symbol}</text>`;
+        }).join("");
+        chartHtml = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;background:#11151c;border:1px solid #2a3140;border-radius:6px">
+            <polyline points="${pts}" fill="none" stroke="#e0a460" stroke-width="1.5"/>
+            ${sigMarks}
+            <text x="${pad}" y="${H - 8}" fill="#7f8a9a" font-size="10">${ohlc[0].date}</text>
+            <text x="${W - pad}" y="${H - 8}" fill="#7f8a9a" font-size="10" text-anchor="end">${ohlc[ohlc.length - 1].date}</text>
+            <text x="${pad}" y="${pad - 4}" fill="#7f8a9a" font-size="10">${hi.toFixed(1)}</text>
+            <text x="${pad}" y="${H - pad + 12}" fill="#7f8a9a" font-size="10">${lo.toFixed(1)}</text>
+        </svg>`;
+    }
+
+    // 2. 命中率聚合
+    function pct(v) { return v == null ? "—" : (v * 100).toFixed(1) + "%"; }
+    const hrHtml = `<div class="stock-rates">
+        <div class="rate-cell"><span class="rate-label">M 1D</span><span class="rate-val">${pct(hr.math_1d)}</span></div>
+        <div class="rate-cell"><span class="rate-label">AI 1D</span><span class="rate-val">${pct(hr.ai_1d)}</span></div>
+        <div class="rate-cell"><span class="rate-label">共識 1D</span><span class="rate-val">${pct(hr.consensus_1d)}</span></div>
+        <div class="rate-cell"><span class="rate-label">M 5D</span><span class="rate-val">${pct(hr.math_5d)} <span class="rate-sub">(${hr.n_5d || 0})</span></span></div>
+        <div class="rate-cell"><span class="rate-label">樣本 1D</span><span class="rate-val">${hr.n_1d || 0}</span></div>
+    </div>`;
+
+    // 3. strongest signals
+    let strongHtml = "<div class='empty dim'>— 資料不足</div>";
+    if (strong.length > 0) {
+        strongHtml = `<table class="data" style="font-size:11.5px"><thead><tr>
+            <th>規則</th><th>觸發</th><th>命中</th><th>勝率</th></tr></thead><tbody>${
+            strong.map(s => `<tr>
+                <td><span class="tag accent">${escapeHtml(s.rule_id)}</span></td>
+                <td>${s.n_trigger}</td><td>${s.n_hit}</td>
+                <td>${pct(s.win_rate)}</td></tr>`).join("")
+        }</tbody></table>`;
+    }
+
+    // 4. predictions 表(最近 10 筆)
+    const recentPreds = preds.slice(-10).reverse();
+    let predHtml = "<div class='empty dim'>無預測紀錄</div>";
+    if (recentPreds.length > 0) {
+        predHtml = `<table class="data" style="font-size:11.5px"><thead><tr>
+            <th>日期</th><th>MATH</th><th>AI</th><th>實際</th><th>命中</th></tr></thead><tbody>${
+            recentPreds.map(p => {
+                const M = p.final_direction || p.direction || "—";
+                const A = p.ai_direction || "—";
+                const act = p.actual_direction || "—";
+                const mhit = p.is_hit === true ? "✓" : (p.is_hit === false ? "✗" : "—");
+                const ahit = p.ai_is_hit === true ? "✓" : (p.ai_is_hit === false ? "✗" : "—");
+                return `<tr>
+                    <td class="mono">${escapeHtml(p.prediction_date)}</td>
+                    <td>${escapeHtml(M)}</td>
+                    <td>${escapeHtml(A)}</td>
+                    <td>${escapeHtml(act)}</td>
+                    <td>${mhit} / ${ahit}</td></tr>`;
+            }).join("")
+        }</tbody></table>`;
+    }
+
+    container.innerHTML = `
+        <div class="stock-section">${chartHtml}</div>
+        <div class="stock-section">
+            <div class="section-title">單股命中率</div>
+            ${hrHtml}
+        </div>
+        <div class="stock-section">
+            <div class="section-title">最強訊號 (觸發 ≥ 3 次)</div>
+            ${strongHtml}
+        </div>
+        <div class="stock-section">
+            <div class="section-title">最近 10 筆預測</div>
+            ${predHtml}
+        </div>
+    `;
+}
+
+// 事件 delegation:點 .stock-link 開 modal
+document.addEventListener("click", (e) => {
+    const a = e.target.closest(".stock-link");
+    if (a) {
+        e.preventDefault();
+        const sym = a.dataset.symbol;
+        if (sym) openStockModal(sym);
+    }
+});
+// 關 modal
+document.addEventListener("click", (e) => {
+    if (e.target.id === "stock-modal-close" ||
+        (e.target.classList && e.target.classList.contains("modal-mask") &&
+         e.target.id === "stock-modal")) {
+        document.getElementById("stock-modal").style.display = "none";
+    }
+});
+
+// v1.0-gamma-2: 訊號成熟度小卡 — 從 /api/signal-maturity 拿 5 階段狀態
+async function loadSignalMaturity() {
+    try {
+        const r = await apiGet("/api/signal-maturity");
+        const steps = [
+            ["m-step-detector",     "detector_ready"],
+            ["m-step-signal",       "signal_backfilled"],
+            ["m-step-outcome",      "outcome_ready"],
+            ["m-step-contribution", "contribution_active"],
+            ["m-step-production",   "production_active"],
+        ];
+        let activeCount = 0;
+        steps.forEach(([elId, key]) => {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const active = !!r[key];
+            el.classList.remove("active", "pending");
+            el.classList.add(active ? "active" : "pending");
+            if (active) activeCount++;
+        });
+        const stage = document.getElementById("maturity-stage");
+        if (stage) stage.textContent = `${r.stage_index ?? activeCount}/5`;
+    } catch (e) {
+        console.warn("loadSignalMaturity failed:", e);
     }
 }
 

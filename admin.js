@@ -94,6 +94,33 @@ function showAdmin() {
     switchTab(currentTab);
 }
 
+// v1.0-gamma-2: 訊號成熟度小卡(控制台版,DOM id 加 adm- 前綴)
+async function refreshSignalMaturity() {
+    try {
+        const r = await publicGet("/api/signal-maturity");
+        const steps = [
+            ["adm-step-detector",     "detector_ready"],
+            ["adm-step-signal",       "signal_backfilled"],
+            ["adm-step-outcome",      "outcome_ready"],
+            ["adm-step-contribution", "contribution_active"],
+            ["adm-step-production",   "production_active"],
+        ];
+        let activeCount = 0;
+        steps.forEach(([elId, key]) => {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const active = !!r[key];
+            el.classList.remove("active", "pending");
+            el.classList.add(active ? "active" : "pending");
+            if (active) activeCount++;
+        });
+        const stage = document.getElementById("admin-maturity-stage");
+        if (stage) stage.textContent = `${r.stage_index ?? activeCount}/5`;
+    } catch (e) {
+        console.warn("refreshSignalMaturity failed:", e);
+    }
+}
+
 // ---- Status panel ----------------------------------------------------
 async function refreshStatus() {
     try {
@@ -101,6 +128,8 @@ async function refreshStatus() {
             publicGet("/api/health").catch(() => null),
             publicGet("/api/system/status").catch(() => null),
         ]);
+        // 順手刷新成熟度小卡
+        refreshSignalMaturity();
         // 頂部狀態點
         $("api-dot").className = "dot " + (health?.ok ? "up" : "down");
         $("db-dot").className = "dot " + (health?.database?.ok ? "up" : "down");
@@ -309,47 +338,100 @@ window.addEventListener("DOMContentLoaded", () => {
     $("tab-jobs").addEventListener("click", () => switchTab("jobs"));
     $("tab-quality").addEventListener("click", () => switchTab("quality"));
 
-    // 每日流程
-    $("act-run-daily").onclick = () =>
-        callAction("/api/admin/run-daily", { history_days: 5 }, "執行每日完整更新");
-    $("act-export-rules").onclick = () =>
-        callAction("/api/admin/export-rules", {}, "匯出 rules.json");
-    $("act-approve").onclick = () =>
-        callAction("/api/admin/approve-report", {}, "通過最新 AI 報告");
+    // v1.0-gamma-2 double confirm helper(危險按鈕用)
+    const confirmAndRun = (msg, endpoint, body, label) => {
+        const v = prompt(`⚠️ ${msg}\n\n輸入「CONFIRM」確認執行:`);
+        if (v === "CONFIRM") callAction(endpoint, body, label);
+        else toast("已取消", "info");
+    };
+    const bind = (id, fn) => {
+        const el = $(id);
+        if (el) el.onclick = fn;
+    };
 
-    // 個別重跑
-    $("act-run-fetch").onclick = () =>
-        callAction("/api/admin/run-fetch", { days: 5 }, "重抓資料");
-    $("act-run-features").onclick = () =>
-        callAction("/api/admin/run-features", {}, "重算技術指標");
-    $("act-run-signals").onclick = () =>
-        callAction("/api/admin/run-signals", {}, "重跑訊號");
-    $("act-run-outcomes").onclick = () =>
-        callAction("/api/admin/run-outcomes", {}, "回填 outcomes");
-    $("act-run-forecast").onclick = () =>
-        callAction("/api/admin/run-forecast", {}, "機率預測 + 校準");
-    $("act-run-eval").onclick = () =>
-        callAction("/api/admin/run-eval", {}, "規則評估");
-    $("act-run-ai").onclick = () =>
-        callAction("/api/admin/run-weekly-ai", {}, "AI 研究員");
-    $("act-run-backup").onclick = () =>
-        callAction("/api/admin/run-backup", {}, "立即備份");
+    // 🌟 每日核心
+    bind("act-run-daily", () =>
+        callAction("/api/admin/run-daily-background", { history_days: 5 }, "執行每日完整更新(背景)"));
+    bind("act-run-fetch", () => {
+        const days = prompt("補抓近 N 日資料(預設 5):", "5");
+        if (days === null) return;
+        callAction("/api/admin/run-fetch-background", { days: parseInt(days) || 5 }, `重抓資料 (近 ${days} 日)`);
+    });
+    bind("act-run-backup", () =>
+        callAction("/api/admin/run-backup", {}, "立即備份"));
+    bind("act-recompute-hit", () =>
+        callAction("/api/admin/recompute-is-hit", {}, "補 is_hit / ai_is_hit"));
+    bind("act-run-ai-critic-bg", () =>
+        callAction("/api/admin/run-ai-critic-background", {}, "補 AI critic (背景)"));
 
-    // 模式
-    $("act-pause").onclick = () =>
-        callAction("/api/admin/pause-jobs", {}, "暫停每日排程");
-    $("act-resume").onclick = () =>
-        callAction("/api/admin/resume-jobs", {}, "恢復每日排程");
-    $("act-maintenance-on").onclick = () =>
-        setMode("system_mode", "maintenance", "切換維護模式");
-    $("act-maintenance-off").onclick = () =>
-        setMode("system_mode", "normal", "恢復正常模式");
+    // 🔧 個別 fetcher
+    bind("act-run-international", () => {
+        const days = prompt("補近 N 日國際盤(預設 60):", "60");
+        if (days === null) return;
+        callAction("/api/admin/run-international", { days: parseInt(days) || 60 }, "補國際盤");
+    });
+    bind("act-run-pcratio", () =>
+        callAction("/api/admin/run-pcratio", {}, "補 PC Ratio"));
+    bind("act-run-fundamental", () =>
+        callAction("/api/admin/run-fundamental", {}, "補基本面"));
+    bind("act-run-regime", () =>
+        callAction("/api/admin/run-regime", {}, "重算 market regime"));
+    bind("act-run-features", () =>
+        callAction("/api/admin/run-features", {}, "重算技術指標"));
+    bind("act-run-signals", () =>
+        callAction("/api/admin/run-signals", {}, "重跑訊號 (today)"));
+    bind("act-backfill-signals", () => {
+        const start = prompt("補歷史訊號 — 開始日期 (YYYY-MM-DD):");
+        if (!start) return;
+        const end = prompt("結束日期 (YYYY-MM-DD):");
+        if (!end) return;
+        callAction("/api/admin/backfill-signals", { start_date: start, end_date: end }, "補歷史訊號");
+    });
 
-    // 初始化
-    $("act-init-schema").onclick = () =>
-        callAction("/api/admin/init-schema", {}, "建立資料表");
-    $("act-init-rules").onclick = () =>
-        callAction("/api/admin/init-rules", {}, "灌入初始規則");
+    // 📊 評估與學習
+    bind("act-refresh-learning", () =>
+        callAction("/api/admin/refresh-learning-summary", {}, "Refresh learning summary"));
+    bind("act-verify-pred", () =>
+        callAction("/api/admin/verify-predictions", {}, "Verify predictions"));
+    bind("act-prediction-eval", () =>
+        callAction("/api/admin/run-prediction-eval", {}, "跑 prediction summary"));
+
+    // 🔍 Diagnostic
+    bind("act-diagnose-futures", async () => {
+        const d = prompt("輸入日期 (YYYY-MM-DD,留空 = 今天):");
+        const date = d || new Date().toISOString().slice(0, 10);
+        try {
+            const r = await authFetch(`/api/admin/diagnose-futures?date=${date}`);
+            const win = window.open("", "_blank", "width=900,height=600");
+            win.document.write(`<pre>${escapeHtml(JSON.stringify(r, null, 2))}</pre>`);
+        } catch (e) {
+            toast("查詢失敗:" + e.message, "error");
+        }
+    });
+
+    // ⚙️ 系統 / 危險
+    bind("act-export-rules", () =>
+        callAction("/api/admin/export-rules", {}, "匯出 rules.json"));
+    bind("act-approve", () =>
+        callAction("/api/admin/approve-report", {}, "通過最新 AI 報告"));
+    bind("act-pause", () =>
+        confirmAndRun("即將暫停每日排程!後續 daily 不會自動跑。",
+                      "/api/admin/pause-jobs", {}, "暫停每日排程"));
+    bind("act-resume", () =>
+        callAction("/api/admin/resume-jobs", {}, "恢復每日排程"));
+    bind("act-maintenance-on", () =>
+        confirmAndRun("即將切換維護模式!用戶會看到維護中。",
+                      null, null, "切換維護模式") || setMode("system_mode", "maintenance", "切換維護模式"));
+    bind("act-maintenance-off", () =>
+        setMode("system_mode", "normal", "恢復正常模式"));
+
+    // ⛔ 初始化(僅首次,危險)
+    bind("act-init-schema", () =>
+        confirmAndRun("即將重建 DB schema!此動作會「重置」資料表結構,僅首次部署用。",
+                      "/api/admin/init-schema", {}, "建立資料表"));
+    bind("act-init-rules", () =>
+        confirmAndRun("即將灌入初始規則!可能覆蓋既有規則。",
+                      "/api/admin/init-rules", {}, "灌入初始規則"));
 
     // 每 30 秒自動刷新狀態(僅在已登入時)
     setInterval(() => {

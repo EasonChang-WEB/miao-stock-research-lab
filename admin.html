@@ -87,38 +87,62 @@
       </div>
       <div class="card-body flush">
 
-        <div class="group-title">⚡ 每日流程</div>
+        <!-- 🌟 每日核心(每天會點) -->
+        <div class="group-title">🌟 每日核心</div>
         <div class="action-list">
           <button class="btn primary" id="act-run-daily"><span class="icon">▶</span>執行每日完整更新</button>
+          <button class="btn primary" id="act-run-fetch"><span class="icon">↓</span>重抓資料 (近 N 日)</button>
+          <button class="btn primary" id="act-run-backup"><span class="icon">💾</span>立即備份</button>
+          <button class="btn primary" id="act-recompute-hit"><span class="icon">✓</span>補 is_hit / ai_is_hit</button>
+          <button class="btn primary" id="act-run-ai-critic-bg"><span class="icon">🤖</span>補 AI critic (背景)</button>
+        </div>
+
+        <!-- 🔧 個別 fetcher -->
+        <div class="group-title">🔧 個別 fetcher</div>
+        <div class="action-list">
+          <button class="btn" id="act-run-international"><span class="icon">🌐</span>補國際盤</button>
+          <button class="btn" id="act-run-pcratio"><span class="icon">π</span>補 PC Ratio</button>
+          <button class="btn" id="act-run-fundamental"><span class="icon">$</span>補基本面</button>
+          <button class="btn" id="act-run-regime"><span class="icon">M</span>重算 market regime</button>
+          <button class="btn" id="act-run-features"><span class="icon">∑</span>重算技術指標</button>
+          <button class="btn" id="act-run-signals"><span class="icon">!</span>重跑訊號 (today)</button>
+          <button class="btn" id="act-backfill-signals"><span class="icon">↺</span>補歷史訊號 (N 日)</button>
+        </div>
+
+        <!-- 📊 評估與學習 -->
+        <div class="group-title">📊 評估與學習</div>
+        <div class="action-list">
+          <button class="btn" id="act-refresh-learning"><span class="icon">🧠</span>Refresh learning summary</button>
+          <button class="btn" id="act-verify-pred"><span class="icon">✓</span>Verify predictions</button>
+          <button class="btn" id="act-prediction-eval"><span class="icon">★</span>跑 prediction summary</button>
+        </div>
+
+        <!-- 🔍 Diagnostic -->
+        <div class="group-title">🔍 Diagnostic</div>
+        <div class="action-list">
+          <button class="btn" id="act-diagnose-futures"><span class="icon">🔬</span>FinMind 期貨診斷</button>
+        </div>
+
+        <!-- ⚙️ 系統 / 危險 -->
+        <div class="group-title">⚙️ 系統 / 危險</div>
+        <div class="action-list">
           <button class="btn" id="act-export-rules"><span class="icon">↑</span>匯出 rules.json</button>
           <button class="btn" id="act-approve"><span class="icon">✓</span>通過最新 AI 報告</button>
-        </div>
-
-        <div class="group-title">🔧 個別重跑</div>
-        <div class="action-list">
-          <button class="btn" id="act-run-fetch"><span class="icon">↓</span>重抓資料 (近 5 日)</button>
-          <button class="btn" id="act-run-features"><span class="icon">∑</span>重算技術指標</button>
-          <button class="btn" id="act-run-signals"><span class="icon">!</span>重跑訊號</button>
-          <button class="btn" id="act-run-outcomes"><span class="icon">τ</span>回填 outcomes</button>
-          <button class="btn" id="act-run-forecast"><span class="icon">π</span>機率預測 + 校準</button>
-          <button class="btn" id="act-run-eval"><span class="icon">★</span>規則評估</button>
-          <button class="btn" id="act-run-ai"><span class="icon">⚙</span>AI 研究員</button>
-          <button class="btn" id="act-run-backup"><span class="icon">💾</span>立即備份</button>
-        </div>
-
-        <div class="group-title">⏸ 系統模式</div>
-        <div class="action-list">
-          <button class="btn danger" id="act-pause"><span class="icon">⏸</span>暫停每日排程</button>
+          <button class="btn danger" id="act-pause"><span class="icon">⏸</span>暫停每日排程 ⚠</button>
           <button class="btn" id="act-resume"><span class="icon">▶</span>恢復每日排程</button>
-          <button class="btn danger" id="act-maintenance-on"><span class="icon">🔧</span>切換維護模式</button>
+          <button class="btn danger" id="act-maintenance-on"><span class="icon">🔧</span>切換維護模式 ⚠</button>
           <button class="btn" id="act-maintenance-off"><span class="icon">✓</span>恢復正常模式</button>
+          <button class="btn danger" id="act-init-schema"><span class="icon">⚙</span>建立資料表 ⛔僅首次</button>
+          <button class="btn danger" id="act-init-rules"><span class="icon">⚙</span>灌入初始規則 ⛔僅首次</button>
         </div>
 
-        <div class="group-title">⚠ 初始化(僅首次)</div>
-        <div class="action-list">
-          <button class="btn danger" id="act-init-schema"><span class="icon">⚙</span>建立資料表</button>
-          <button class="btn danger" id="act-init-rules"><span class="icon">⚙</span>灌入初始規則</button>
-        </div>
+        <!--
+          v1.0-gamma-2 隱藏 — 6/2 5D 驗收前禁用,避免污染 baseline:
+            run-outcomes / run-forecast / run-eval / prediction-backfill
+          移除 — deprecated 或壞掉:
+            run-weekly-ai(AI 研究員,5/16 後沒更新,改寫成每日盤勢摘要後再啟用)
+            run-ai-critic(sync)— 用 background 版即可
+        -->
       </div>
     </aside>
 
@@ -132,6 +156,33 @@
         </div>
         <div class="card-body" id="status-body">
           <div class="empty"><span class="spinner"></span>讀取中...</div>
+        </div>
+      </section>
+
+      <!-- v1.0-gamma-2:訊號成熟度小卡 -->
+      <section class="card">
+        <div class="card-head">
+          <span class="title">🌱 新訊號成熟度</span>
+          <span class="meta" id="admin-maturity-stage">--/5</span>
+        </div>
+        <div class="card-body">
+          <div class="m-steps" id="admin-maturity-steps">
+            <div class="m-step" id="adm-step-detector">
+              <span class="m-dot">●</span><span class="m-label">detector_ready</span>
+            </div>
+            <div class="m-step" id="adm-step-signal">
+              <span class="m-dot">●</span><span class="m-label">signal_backfilled</span>
+            </div>
+            <div class="m-step" id="adm-step-outcome">
+              <span class="m-dot">●</span><span class="m-label">outcome_ready</span>
+            </div>
+            <div class="m-step" id="adm-step-contribution">
+              <span class="m-dot">●</span><span class="m-label">contribution_active</span>
+            </div>
+            <div class="m-step" id="adm-step-production">
+              <span class="m-dot">●</span><span class="m-label">production_active</span>
+            </div>
+          </div>
         </div>
       </section>
 

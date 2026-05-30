@@ -161,6 +161,38 @@
       </div>
     </section>
 
+    <!-- ROW 1.5: 訊號成熟度小卡(v1.0-gamma-2 加,顯示新訊號入模進度) -->
+    <section class="maturity-row">
+      <div class="maturity-card" title="新 MKT/INTL/FUND 訊號的入模進度。從 detector 偵測 → 訊號入庫 → outcome 算命中 → 進權重 → 真正影響生產預測。">
+        <div class="m-head">
+          <span class="m-title">🌱 新訊號成熟度</span>
+          <span class="m-stage" id="maturity-stage">--/5</span>
+        </div>
+        <div class="m-steps">
+          <div class="m-step" id="m-step-detector">
+            <span class="m-dot">●</span><span class="m-label">detector_ready</span>
+            <span class="m-desc">偵測器已生 signals</span>
+          </div>
+          <div class="m-step" id="m-step-signal">
+            <span class="m-dot">●</span><span class="m-label">signal_backfilled</span>
+            <span class="m-desc">歷史訊號已 backfill</span>
+          </div>
+          <div class="m-step" id="m-step-outcome">
+            <span class="m-dot">●</span><span class="m-label">outcome_ready</span>
+            <span class="m-desc">outcomes 已算 win_rate</span>
+          </div>
+          <div class="m-step" id="m-step-contribution">
+            <span class="m-dot">●</span><span class="m-label">contribution_active</span>
+            <span class="m-desc">已進預測權重</span>
+          </div>
+          <div class="m-step" id="m-step-production">
+            <span class="m-dot">●</span><span class="m-label">production_active</span>
+            <span class="m-desc">過去 7 天 daily 都生效</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ROW 2: Math × AI 四象限(整列 4 卡) -->
     <section class="quadrant-row">
       <div class="qd-cell consensus">
@@ -329,6 +361,19 @@
       <div id="hist-body">
         <div class="empty">選擇日期後按查詢</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- v1.0-gamma-2: 個股 modal(走勢 + 訊號 + 預測 + 命中率) -->
+<div class="modal-mask" id="stock-modal">
+  <div class="modal-box stock-modal-box">
+    <div class="modal-head">
+      <span class="title" id="stock-modal-title">個股分析</span>
+      <button class="modal-close" id="stock-modal-close">×</button>
+    </div>
+    <div class="modal-body" id="stock-modal-body">
+      <div class="empty"><span class="spinner"></span>讀取中...</div>
     </div>
   </div>
 </div>
